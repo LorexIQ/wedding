@@ -42,9 +42,12 @@ export function useAdminGuests() {
 
   async function patchGuest(id: number, patch: Partial<GuestRecord>) {
     const requestFetch = useRequestFetch()
-    const updated = await requestFetch(`/api/admin/guests/${id}`, { method: 'PATCH', body: patch })
+    const updated = await requestFetch(`/api/admin/guests/${id}`, { method: 'PATCH', body: patch }) as unknown as Omit<GuestRecord, 'companions'>
     const index = guestsList.value.findIndex((guest) => guest.id === id)
-    if (index !== -1) guestsList.value[index] = { ...guestsList.value[index], ...updated }
+    const current = guestsList.value[index]
+    if (index !== -1 && current) {
+      guestsList.value[index] = { ...current, ...updated, companions: current.companions }
+    }
   }
 
   async function removeGuest(id: number) {
