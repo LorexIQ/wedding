@@ -27,7 +27,18 @@ export const guestPatchSchema = z.object({
   fio: z.string().trim().min(1).max(200).optional(),
   phone: z.string().trim().max(30).optional(),
   comment: z.string().trim().max(1000).optional(),
-  drinks: drinksField.optional()
+  drinks: drinksField.optional(),
+  submitted: z.boolean().optional(),
+  envelopeOpened: z.boolean().optional()
 }).strict()
 
 export type GuestPatchInput = z.infer<typeof guestPatchSchema>
+
+export const guestCreateSchema = z.object({
+  fio: z.string().trim().max(200).optional(),
+  phone: z.string().trim().max(30).optional(),
+  comment: z.string().trim().max(1000).optional(),
+  drinks: drinksField.optional()
+}).strict()
+
+export type GuestCreateInput = z.infer<typeof guestCreateSchema>

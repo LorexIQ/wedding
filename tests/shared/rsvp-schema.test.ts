@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { rsvpSchema, guestPatchSchema } from '../../shared/schemas/rsvp'
+import { rsvpSchema, guestPatchSchema, guestCreateSchema } from '../../shared/schemas/rsvp'
 import { isDrinkSetValid } from '../../shared/constants/drinks'
 
 describe('rsvpSchema', () => {
@@ -77,5 +77,44 @@ describe('взаимоисключение «Не пью»', () => {
   it('guestPatchSchema отклоняет такой набор при правке из админки', () => {
     const parsed = guestPatchSchema.safeParse({ drinks: ['none', 'brandy'] })
     expect(parsed.success).toBe(false)
+  })
+})
+
+describe('guestCreateSchema (POST /api/admin/guests — создание инвайта)', () => {
+  it('принимает полностью пустой объект — все поля опциональны', () => {
+    const result = guestCreateSchema.safeParse({})
+    expect(result.success).toBe(true)
+  })
+
+  it('принимает частичное заполнение', () => {
+    const result = guestCreateSchema.safeParse({ fio: 'Иванов Иван' })
+    expect(result.success).toBe(true)
+  })
+
+  it('отклоняет несовместимый набор напитков', () => {
+    const result = guestCreateSchema.safeParse({ drinks: ['none', 'vodka'] })
+    expect(result.success).toBe(false)
+  })
+
+  it('отклоняет неизвестный ключ', () => {
+    const result = guestCreateSchema.safeParse({ id: 999 })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe('guestPatchSchema — новые поля fio/submitted/envelopeOpened', () => {
+  it('принимает fio отдельно от остальных полей', () => {
+    const result = guestPatchSchema.safeParse({ fio: 'Иванов Иван' })
+    expect(result.success).toBe(true)
+  })
+
+  it('принимает submitted и envelopeOpened как булевы флаги', () => {
+    const result = guestPatchSchema.safeParse({ submitted: true, envelopeOpened: false })
+    expect(result.success).toBe(true)
+  })
+
+  it('отклоняет submitted не булевого типа', () => {
+    const result = guestPatchSchema.safeParse({ submitted: 'true' })
+    expect(result.success).toBe(false)
   })
 })
