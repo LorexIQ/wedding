@@ -14,8 +14,8 @@ const canvas = ref<HTMLCanvasElement | null>(null)
 const done = ref(false)
 
 // Цвета из палитры приглашения: на льняном фоне яркая радуга выглядит
-// чужой, а золото с зеленью читается как часть оформления.
-const COLORS = ['#B99A62', '#8B9880', '#8E6F3E', '#C7B08A', '#6E6255']
+// чужой, а шалфейная зелень с айвори читается как часть оформления.
+const COLORS = ['#7C8A6E', '#93A47F', '#C7CEB9', '#E8ECDF', '#FBFAF6']
 
 const GRAVITY = 620
 const DRAG = 0.86

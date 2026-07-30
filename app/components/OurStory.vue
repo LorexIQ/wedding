@@ -65,7 +65,7 @@ const photoBroken = ref(false)
   aspect-ratio: 1 / 1;
   padding: 12px;
   border: 1px dashed var(--ink-faint);
-  background: repeating-linear-gradient(45deg, transparent 0 11px, rgba(162, 149, 127, 0.09) 11px 22px);
+  background: repeating-linear-gradient(45deg, transparent 0 11px, rgba(147, 164, 127, 0.1) 11px 22px);
   font-family: var(--sans);
   font-size: 11px;
   letter-spacing: 0.1em;

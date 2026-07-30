@@ -4,16 +4,16 @@
 :root {
   color-scheme: light;
 
-  --linen: #EFE9DF;
-  --linen-deep: #E5DDD0;
-  --paper: #F7F3EC;
-  --ink: #38322B;
-  --ink-soft: #6E6255;
-  --ink-faint: #A2957F;
-  --wheat: #B99A62;
-  --sage: #8B9880;
-  --rule: #D6CBB8;
-  --alarm: #9A4A34;
+  --linen: #F5F3ED;
+  --linen-deep: #E8ECE0;
+  --paper: #FBFAF6;
+  --ink: #363B32;
+  --ink-soft: #6D7465;
+  --ink-faint: #9BA391;
+  --wheat: #6F7D5A;
+  --sage: #93A47F;
+  --rule: #DADFCB;
+  --alarm: #A6503F;
 
   /* Веб-шрифт не подключаем: приличная кириллическая антиква весит
      сотни килобайт, а Georgia есть на всех устройствах. */

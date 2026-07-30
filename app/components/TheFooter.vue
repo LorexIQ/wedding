@@ -44,15 +44,15 @@ const revealed = ref(false)
 }
 
 .foot .eyebrow {
-  color: #9C8E77;
+  color: #A9B39C;
 }
 
 .foot__phone {
   padding-bottom: 2px;
   border: none;
-  border-bottom: 1px solid rgba(232, 214, 174, 0.35);
+  border-bottom: 1px solid rgba(212, 220, 195, 0.35);
   background: none;
-  color: #E8D6AE;
+  color: #DCE4CD;
   font-family: var(--serif);
   font-size: clamp(1.35rem, 4vw, 1.7rem);
   text-decoration: none;
@@ -65,19 +65,19 @@ const revealed = ref(false)
 }
 
 .foot__phone:hover {
-  border-bottom-color: #E8D6AE;
+  border-bottom-color: #DCE4CD;
 }
 
 .foot__hint {
   font-family: var(--sans);
   font-size: 11.5px;
   letter-spacing: 0.05em;
-  color: #9C8E77;
+  color: #A9B39C;
 }
 
 .foot__sign {
   max-width: 24rem;
   font-style: italic;
-  color: #C3B79F;
+  color: #C6CDB4;
 }
 </style>

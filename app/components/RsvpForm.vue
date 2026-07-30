@@ -259,11 +259,11 @@ textarea[aria-invalid="true"] {
 }
 
 .drink:hover {
-  background: #F1EDE4;
+  background: #EEF1E6;
 }
 
 .drink:has(input:checked) {
-  background: #EAEDE4;
+  background: #E3E8D8;
 }
 
 .companion {
@@ -342,6 +342,6 @@ textarea[aria-invalid="true"] {
 }
 
 .submit:hover:not(:disabled) {
-  background: #4B4238;
+  background: #454C3D;
 }
 </style>
