@@ -4,6 +4,10 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   app: {
     head: {
+      meta: [
+        // Запрещаем индексацию сайта поисковыми системами.
+        { name: 'robots', content: 'noindex, nofollow, noarchive, nosnippet' }
+      ],
       // Пиксель для тех, у кого выключен JavaScript: плагин Метрики
       // у них не отработает, а этот запрос уйдёт.
       noscript: [
