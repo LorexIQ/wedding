@@ -87,4 +87,24 @@ describe('useRsvpForm', () => {
     expect(form.companions[0]!.drinks).toEqual(['none'])
     expect(form.companions[1]!.drinks).toEqual(['vodka'])
   })
+
+  it('предзаполняет форму данными гостя, но не спутниками', () => {
+    const { form } = useRsvpForm({ fio: 'Иванов Иван', phone: '+79990000000', comment: 'Без орехов', drinks: ['red_dry'] })
+    expect(form.fio).toBe('Иванов Иван')
+    expect(form.phone).toBe('+79990000000')
+    expect(form.comment).toBe('Без орехов')
+    expect(form.drinks).toEqual(['red_dry'])
+    expect(form.companions).toEqual([])
+  })
+
+  it('без префилла форма пустая, как раньше', () => {
+    const { form } = useRsvpForm()
+    expect(form.fio).toBe('')
+    expect(form.drinks).toEqual([])
+  })
+
+  it('initiallySubmitted=true сразу показывает состояние «отправлено»', () => {
+    const { submitted } = useRsvpForm(undefined, true)
+    expect(submitted.success).toBe(true)
+  })
 })

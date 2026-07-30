@@ -7,18 +7,25 @@ export interface CompanionForm {
   drinks: string[]
 }
 
-export function useRsvpForm() {
+export interface RsvpPrefill {
+  fio?: string | null
+  phone?: string | null
+  comment?: string | null
+  drinks?: string[]
+}
+
+export function useRsvpForm(prefill?: RsvpPrefill, initiallySubmitted = false) {
   const form = reactive({
-    fio: '',
-    phone: '',
-    comment: '',
-    drinks: [] as string[],
+    fio: prefill?.fio ?? '',
+    phone: prefill?.phone ?? '',
+    comment: prefill?.comment ?? '',
+    drinks: prefill?.drinks ? [...prefill.drinks] : [],
     companions: [] as CompanionForm[],
     website: ''
   })
 
   const errors = reactive<{ message?: string, fields: Record<string, string> }>({ fields: {} })
-  const submitted = reactive({ success: false, pending: false })
+  const submitted = reactive({ success: initiallySubmitted, pending: false })
 
   function addCompanion() {
     if (form.companions.length >= 3) return

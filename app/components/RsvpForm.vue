@@ -2,8 +2,20 @@
 import { useRsvpForm } from '../composables/useRsvpForm'
 import { wedding } from '../content/wedding'
 import { DRINK_OPTIONS, DRINK_LABELS } from '#shared/constants/drinks'
+import { formatFio } from '../utils/formatFio'
 
-const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, submit } = useRsvpForm()
+const inviteGuest = useState<{ fio: string | null, phone: string | null, comment: string | null, drinks: string[], submitted: boolean } | undefined>('inviteGuest')
+
+const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, submit } =
+  useRsvpForm(inviteGuest.value, inviteGuest.value?.submitted ?? false)
+
+function onFioBlur() {
+  form.fio = formatFio(form.fio)
+}
+
+function onCompanionFioBlur(index: number) {
+  form.companions[index]!.fio = formatFio(form.companions[index]!.fio)
+}
 </script>
 
 <template>
@@ -41,6 +53,7 @@ const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, sub
             autocomplete="name"
             placeholder="Иван Петров"
             :aria-invalid="Boolean(errors.fields.fio)"
+            @blur="onFioBlur"
           >
           <p v-if="errors.fields.fio" class="error">{{ errors.fields.fio }}</p>
         </div>
@@ -89,6 +102,7 @@ const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, sub
               type="text"
               placeholder="Мария Петрова"
               :aria-invalid="Boolean(errors.fields[`companions.${index}.fio`])"
+              @blur="onCompanionFioBlur(index)"
             >
             <p v-if="errors.fields[`companions.${index}.fio`]" class="error">
               {{ errors.fields[`companions.${index}.fio`] }}
