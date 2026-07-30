@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      - NUXT_DB_PATH=/app/data/wedding.db
+      - NUXT_SESSION_SECRET=${SESSION_SECRET}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
