@@ -24,7 +24,7 @@ export const rsvpSchema = z.object({
 export type RsvpInput = z.infer<typeof rsvpSchema>
 
 export const guestPatchSchema = z.object({
-  fio: z.string().trim().min(1).max(200).optional(),
+  fio: z.string().trim().max(200).optional(),
   phone: z.string().trim().max(30).optional(),
   comment: z.string().trim().max(1000).optional(),
   drinks: drinksField.optional(),

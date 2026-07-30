@@ -117,4 +117,9 @@ describe('guestPatchSchema — новые поля fio/submitted/envelopeOpened'
     const result = guestPatchSchema.safeParse({ submitted: 'true' })
     expect(result.success).toBe(false)
   })
+
+  it('принимает пустую строку fio, позволяя очистить ФИО', () => {
+    const result = guestPatchSchema.safeParse({ fio: '' })
+    expect(result.success).toBe(true)
+  })
 })
