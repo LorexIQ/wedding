@@ -1,16 +1,22 @@
 import { z } from 'zod'
-import { DRINK_OPTIONS } from '../constants/drinks'
+import { DRINK_OPTIONS, isDrinkSetValid } from '../constants/drinks'
+
+const DRINK_CLASH = '«Не пью» нельзя совместить с другими напитками'
+
+const drinksField = z
+  .array(z.enum(DRINK_OPTIONS))
+  .refine(isDrinkSetValid, DRINK_CLASH)
 
 export const companionSchema = z.object({
   fio: z.string().trim().min(1, 'Укажите ФИО сопровождающего').max(200),
-  drinks: z.array(z.enum(DRINK_OPTIONS)).default([])
+  drinks: drinksField.default([])
 })
 
 export const rsvpSchema = z.object({
   fio: z.string().trim().min(1, 'Укажите ФИО').max(200),
   phone: z.string().trim().max(30).optional().or(z.literal('')),
   comment: z.string().trim().max(1000).optional().or(z.literal('')),
-  drinks: z.array(z.enum(DRINK_OPTIONS)).default([]),
+  drinks: drinksField.default([]),
   companions: z.array(companionSchema).max(3, 'Не больше 3 сопровождающих').default([]),
   website: z.string().optional().default('')
 })
@@ -21,7 +27,7 @@ export const guestPatchSchema = z.object({
   fio: z.string().trim().min(1).max(200).optional(),
   phone: z.string().trim().max(30).optional(),
   comment: z.string().trim().max(1000).optional(),
-  drinks: z.array(z.enum(DRINK_OPTIONS)).optional()
+  drinks: drinksField.optional()
 }).strict()
 
 export type GuestPatchInput = z.infer<typeof guestPatchSchema>

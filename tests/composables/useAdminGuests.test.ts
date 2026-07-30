@@ -4,7 +4,7 @@ import { useAdminGuests } from '../../app/composables/useAdminGuests'
 describe('useAdminGuests', () => {
   beforeEach(() => {
     vi.stubGlobal('$fetch', vi.fn().mockResolvedValue([
-      { id: 1, fio: 'Иванов Иван', phone: null, comment: null, drinks: ['wine'], companions: [] }
+      { id: 1, fio: 'Иванов Иван', phone: null, comment: null, drinks: ['red_dry'], companions: [] }
     ]))
   })
 

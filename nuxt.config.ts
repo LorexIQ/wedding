@@ -1,9 +1,23 @@
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-30',
   devtools: { enabled: true },
+  css: ['~/assets/css/main.css'],
+  app: {
+    head: {
+      // Пиксель для тех, у кого выключен JavaScript: плагин Метрики
+      // у них не отработает, а этот запрос уйдёт.
+      noscript: [
+        {
+          innerHTML: '<div><img src="https://mc.yandex.ru/watch/111173886" style="position:absolute; left:-9999px;" alt="" /></div>'
+        }
+      ]
+    }
+  },
   runtimeConfig: {
     dbPath: process.env.DB_PATH || './data/wedding.db',
     sessionSecret: process.env.SESSION_SECRET || '',
-    public: {}
+    public: {
+      metrikaId: process.env.METRIKA_ID || '111173886'
+    }
   }
 })

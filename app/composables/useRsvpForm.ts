@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
 import { rsvpSchema, type RsvpInput } from '#shared/schemas/rsvp'
-import { DRINK_OPTIONS } from '#shared/constants/drinks'
+import { DRINK_OPTIONS, normalizeDrinks } from '#shared/constants/drinks'
 
 export interface CompanionForm {
   fio: string
@@ -17,7 +17,7 @@ export function useRsvpForm() {
     website: ''
   })
 
-  const errors = reactive<{ message?: string }>({})
+  const errors = reactive<{ message?: string, fields: Record<string, string> }>({ fields: {} })
   const submitted = reactive({ success: false, pending: false })
 
   function addCompanion() {
@@ -29,12 +29,27 @@ export function useRsvpForm() {
     form.companions.splice(index, 1)
   }
 
+  function toggleDrink(target: { drinks: string[] }, option: string) {
+    target.drinks = normalizeDrinks(target.drinks, option)
+  }
+
   function buildPayload(): RsvpInput | null {
     const parsed = rsvpSchema.safeParse(form)
+
+    // Zod отдаёт путь до поля (['companions', 0, 'fio']) — склеиваем его
+    // в ключ, по которому шаблон найдёт свою подпись под инпутом.
     if (!parsed.success) {
-      errors.message = parsed.error.issues[0]?.message
+      const fields: Record<string, string> = {}
+      for (const issue of parsed.error.issues) {
+        const key = issue.path.join('.')
+        if (!fields[key]) fields[key] = issue.message
+      }
+      errors.fields = fields
+      errors.message = 'Проверьте отмеченные поля'
       return null
     }
+
+    errors.fields = {}
     errors.message = undefined
     return parsed.data
   }
@@ -56,5 +71,5 @@ export function useRsvpForm() {
     }
   }
 
-  return { form, errors, submitted, addCompanion, removeCompanion, buildPayload, submit, DRINK_OPTIONS }
+  return { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, buildPayload, submit, DRINK_OPTIONS }
 }

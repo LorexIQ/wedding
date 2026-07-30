@@ -11,9 +11,9 @@ import { guestPatchSchema } from '#shared/schemas/rsvp'
 function seedGuest(testDb: ReturnType<typeof createTestDb>) {
   const now = new Date()
   const guest = testDb.insert(guests).values({
-    fio: 'Иванов Иван', phone: null, comment: null, drinks: ['wine'], createdAt: now, updatedAt: now
+    fio: 'Иванов Иван', phone: null, comment: null, drinks: ['red_dry'], createdAt: now, updatedAt: now
   }).returning({ id: guests.id }).get()
-  testDb.insert(companions).values({ guestId: guest.id, fio: 'Петров Пётр', drinks: ['beer'] }).run()
+  testDb.insert(companions).values({ guestId: guest.id, fio: 'Петров Пётр', drinks: ['sparkling'] }).run()
   return guest.id
 }
 
@@ -76,7 +76,7 @@ describe('guestPatchSchema (PATCH /api/admin/guests/:id validation)', () => {
   })
 
   it('rejects a non-array drinks value', () => {
-    const parsed = guestPatchSchema.safeParse({ drinks: 'wine' })
+    const parsed = guestPatchSchema.safeParse({ drinks: 'red_dry' })
     expect(parsed.success).toBe(false)
   })
 
@@ -89,7 +89,7 @@ describe('guestPatchSchema (PATCH /api/admin/guests/:id validation)', () => {
     const event = createMockEvent({
       method: 'PATCH',
       params: { id: '1' },
-      body: { drinks: 'wine' },
+      body: { drinks: 'red_dry' },
       authenticated: true
     })
 
