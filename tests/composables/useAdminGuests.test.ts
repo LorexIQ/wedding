@@ -30,4 +30,17 @@ describe('useAdminGuests', () => {
     await patchGuest(1, { comment: 'Аллергия' })
     expect(guestsList.value[0].comment).toBe('Аллергия')
   })
+
+  it('createGuestInvite добавляет созданного гостя в список', async () => {
+    const { guestsList, createGuestInvite } = useAdminGuests()
+    vi.stubGlobal('$fetch', vi.fn().mockResolvedValue({
+      id: 2, fio: null, phone: null, comment: null, drinks: [],
+      inviteCode: 'ABC1234567', submitted: false, envelopeOpened: false, companions: []
+    }))
+
+    const created = await createGuestInvite({})
+    expect(created.inviteCode).toBe('ABC1234567')
+    expect(guestsList.value).toHaveLength(1)
+    expect(guestsList.value[0].inviteCode).toBe('ABC1234567')
+  })
 })

@@ -2,11 +2,21 @@ import { ref } from 'vue'
 
 export interface GuestRecord {
   id: number
-  fio: string
+  fio: string | null
   phone: string | null
   comment: string | null
   drinks: string[]
+  inviteCode: string | null
+  submitted: boolean
+  envelopeOpened: boolean
   companions: { id: number, fio: string, drinks: string[] }[]
+}
+
+export interface GuestCreateInput {
+  fio?: string
+  phone?: string
+  comment?: string
+  drinks?: string[]
 }
 
 export function useAdminGuests() {
@@ -23,6 +33,13 @@ export function useAdminGuests() {
     }
   }
 
+  async function createGuestInvite(input: GuestCreateInput) {
+    const requestFetch = useRequestFetch()
+    const created = await requestFetch<GuestRecord>('/api/admin/guests', { method: 'POST', body: input })
+    guestsList.value.push(created)
+    return created
+  }
+
   async function patchGuest(id: number, patch: Partial<GuestRecord>) {
     const requestFetch = useRequestFetch()
     const updated = await requestFetch(`/api/admin/guests/${id}`, { method: 'PATCH', body: patch })
@@ -36,5 +53,5 @@ export function useAdminGuests() {
     guestsList.value = guestsList.value.filter((guest) => guest.id !== id)
   }
 
-  return { guestsList, loading, fetchGuests, patchGuest, removeGuest }
+  return { guestsList, loading, fetchGuests, createGuestInvite, patchGuest, removeGuest }
 }
