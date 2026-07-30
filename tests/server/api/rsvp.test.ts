@@ -10,8 +10,8 @@ describe('submitRsvp', () => {
       fio: 'Иванов Иван Иванович',
       phone: '+79990000000',
       comment: '',
-      drinks: ['wine'],
-      companions: [{ fio: 'Петров Пётр', drinks: ['beer'] }],
+      drinks: ['red_dry'],
+      companions: [{ fio: 'Петров Пётр', drinks: ['sparkling'] }],
       website: ''
     }, { dbInstance: testDb })
 

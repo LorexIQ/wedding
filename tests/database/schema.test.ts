@@ -12,7 +12,7 @@ describe('schema', () => {
       fio: 'Иванов Иван Иванович',
       phone: '+79990000000',
       comment: null,
-      drinks: ['wine'],
+      drinks: ['red_dry'],
       createdAt: now,
       updatedAt: now
     }).returning({ id: guests.id }).get()
@@ -20,14 +20,14 @@ describe('schema', () => {
     db.insert(companions).values({
       guestId: guest.id,
       fio: 'Петров Пётр',
-      drinks: ['beer']
+      drinks: ['sparkling']
     }).run()
 
     const savedGuest = db.select().from(guests).where(eq(guests.id, guest.id)).get()
     const savedCompanions = db.select().from(companions).where(eq(companions.guestId, guest.id)).all()
 
     expect(savedGuest?.fio).toBe('Иванов Иван Иванович')
-    expect(savedGuest?.drinks).toEqual(['wine'])
+    expect(savedGuest?.drinks).toEqual(['red_dry'])
     expect(savedCompanions).toHaveLength(1)
     expect(savedCompanions[0].fio).toBe('Петров Пётр')
   })

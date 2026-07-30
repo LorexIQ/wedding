@@ -13,8 +13,8 @@ describe('guestsToCsv', () => {
       fio: 'Иванов Иван',
       phone: '+79990000000',
       comment: null,
-      drinks: ['wine', 'beer'],
-      companions: [{ fio: 'Петров Пётр', drinks: ['beer'] }]
+      drinks: ['red_dry', 'sparkling'],
+      companions: [{ fio: 'Петров Пётр', drinks: ['sparkling'] }]
     }])
 
     const lines = csv.split('\n')
@@ -22,7 +22,7 @@ describe('guestsToCsv', () => {
     // defense: a bare "+79990000000" can't form a spreadsheet formula or
     // DDE payload, and prefixing it with a quote would just mangle a
     // number that's meant to be copied/dialed as-is.
-    expect(lines[1]).toBe('1,Иванов Иван,+79990000000,,wine; beer,Петров Пётр (beer)')
+    expect(lines[1]).toBe('1,Иванов Иван,+79990000000,,red_dry; sparkling,Петров Пётр (sparkling)')
   })
 
   it('does not prefix a phone number even though it starts with +', () => {
