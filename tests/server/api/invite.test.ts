@@ -28,3 +28,24 @@ describe('resolveInvite', () => {
     expect(guest).toBeNull()
   })
 })
+
+import { markEnvelopeOpened } from '../../../server/api/invite/[code]/open.post'
+
+describe('markEnvelopeOpened', () => {
+  it('проставляет envelopeOpened=true по коду', () => {
+    const testDb = createTestDb()
+    seedInvite(testDb)
+
+    const ok = markEnvelopeOpened('ABC1234567', testDb)
+    expect(ok).toBe(true)
+
+    const guest = resolveInvite('ABC1234567', testDb)
+    expect(guest?.envelopeOpened).toBe(true)
+  })
+
+  it('возвращает null для неизвестного кода, ничего не меняя', () => {
+    const testDb = createTestDb()
+    const ok = markEnvelopeOpened('NOPE000000', testDb)
+    expect(ok).toBeNull()
+  })
+})
