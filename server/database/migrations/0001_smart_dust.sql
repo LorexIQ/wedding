@@ -12,7 +12,7 @@ CREATE TABLE `__new_guests` (
 	`updated_at` integer NOT NULL
 );
 --> statement-breakpoint
-INSERT INTO `__new_guests`("id", "fio", "phone", "comment", "drinks", "invite_code", "submitted", "envelope_opened", "created_at", "updated_at") SELECT "id", "fio", "phone", "comment", "drinks", "invite_code", "submitted", "envelope_opened", "created_at", "updated_at" FROM `guests`;--> statement-breakpoint
+INSERT INTO `__new_guests`("id", "fio", "phone", "comment", "drinks", "created_at", "updated_at") SELECT "id", "fio", "phone", "comment", "drinks", "created_at", "updated_at" FROM `guests`;--> statement-breakpoint
 DROP TABLE `guests`;--> statement-breakpoint
 ALTER TABLE `__new_guests` RENAME TO `guests`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;--> statement-breakpoint

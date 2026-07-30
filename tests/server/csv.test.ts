@@ -80,4 +80,18 @@ describe('guestsToCsv', () => {
     const lines = csv.split('\n')
     expect(lines[1]).toBe("4,Тест,,'+1+1,,")
   })
+
+  it('renders a guest with null fio as an empty ФИО column', () => {
+    const csv = guestsToCsv([{
+      id: 6,
+      fio: null,
+      phone: '+79990000000',
+      comment: null,
+      drinks: [],
+      companions: []
+    }])
+
+    const lines = csv.split('\n')
+    expect(lines[1]).toBe('6,,+79990000000,,,')
+  })
 })
