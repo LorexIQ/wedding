@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { eq } from 'drizzle-orm'
 import { createTestDb } from '../../helpers/testDb'
 import { createMockEvent } from '../../helpers/mockEvent'
@@ -7,6 +7,11 @@ import { listGuests } from '../../../server/api/admin/guests/index.get'
 import { updateGuest, default as patchGuestHandler } from '../../../server/api/admin/guests/[id].patch'
 import { deleteGuest } from '../../../server/api/admin/guests/[id].delete'
 import { guestPatchSchema } from '#shared/schemas/rsvp'
+
+vi.mock('../../../server/utils/inviteCode', () => ({ generateInviteCode: vi.fn(() => 'STATICCODE') }))
+
+import { generateInviteCode } from '../../../server/utils/inviteCode'
+import { createGuestInvite, createUniqueInviteCode } from '../../../server/api/admin/guests/index.post'
 
 function seedGuest(testDb: ReturnType<typeof createTestDb>) {
   const now = new Date()
@@ -105,5 +110,72 @@ describe('guestPatchSchema (PATCH /api/admin/guests/:id validation)', () => {
     })
 
     await expect(patchGuestHandler(event)).rejects.toMatchObject({ statusCode: 400 })
+  })
+})
+
+describe('createGuestInvite (POST /api/admin/guests)', () => {
+  it('создаёт гостя с пустыми полями и сгенерированным кодом', async () => {
+    const testDb = createTestDb()
+    const created = await createGuestInvite({}, testDb)
+
+    expect(created.fio).toBeNull()
+    expect(created.submitted).toBe(false)
+    expect(created.envelopeOpened).toBe(false)
+    expect(created.inviteCode).toMatch(/^[A-Za-z0-9]{10}$/)
+  })
+
+  it('создаёт гостя с частичным предзаполнением', async () => {
+    const testDb = createTestDb()
+    const created = await createGuestInvite({ fio: 'Иванов Иван', drinks: ['red_dry'] }, testDb)
+
+    expect(created.fio).toBe('Иванов Иван')
+    expect(created.drinks).toEqual(['red_dry'])
+    expect(created.phone).toBeNull()
+  })
+})
+
+describe('updateGuest — переключение флагов submitted/envelopeOpened', () => {
+  it('обновляет submitted и envelopeOpened через updateGuest', async () => {
+    const testDb = createTestDb()
+    const id = seedGuest(testDb)
+
+    const updated = await updateGuest(id, { submitted: true, envelopeOpened: true }, testDb)
+    expect(updated?.submitted).toBe(true)
+    expect(updated?.envelopeOpened).toBe(true)
+
+    const reverted = await updateGuest(id, { submitted: false }, testDb)
+    expect(reverted?.submitted).toBe(false)
+    expect(reverted?.envelopeOpened).toBe(true)
+  })
+})
+
+describe('createUniqueInviteCode — коллизия кода', () => {
+  it('повторяет генерацию, если код уже занят', () => {
+    const testDb = createTestDb()
+    const now = new Date()
+    testDb.insert(guests).values({
+      fio: null, phone: null, comment: null, drinks: [],
+      inviteCode: 'DUPLICATE1', createdAt: now, updatedAt: now
+    }).run()
+
+    vi.mocked(generateInviteCode)
+      .mockReturnValueOnce('DUPLICATE1')
+      .mockReturnValueOnce('FRESHCODE1')
+
+    const code = createUniqueInviteCode(testDb)
+    expect(code).toBe('FRESHCODE1')
+  })
+
+  it('падает после исчерпания всех попыток', () => {
+    const testDb = createTestDb()
+    const now = new Date()
+    testDb.insert(guests).values({
+      fio: null, phone: null, comment: null, drinks: [],
+      inviteCode: 'ALWAYSSAME', createdAt: now, updatedAt: now
+    }).run()
+
+    vi.mocked(generateInviteCode).mockReturnValue('ALWAYSSAME')
+
+    expect(() => createUniqueInviteCode(testDb)).toThrow()
   })
 })

@@ -4,6 +4,7 @@ import listGuestsHandler from '../../../server/api/admin/guests/index.get'
 import patchGuestHandler from '../../../server/api/admin/guests/[id].patch'
 import deleteGuestHandler from '../../../server/api/admin/guests/[id].delete'
 import exportGuestsHandler from '../../../server/api/admin/guests/export.get'
+import createGuestHandler from '../../../server/api/admin/guests/index.post'
 
 // Every admin route's default export calls `requireAdminSession(event)` as
 // its very first line (server/utils/session.ts). Nothing in the rest of the
@@ -40,5 +41,10 @@ describe('admin route auth guards', () => {
   it('GET /api/admin/guests/export rejects an unauthenticated request with 401', async () => {
     const event = createMockEvent({ method: 'GET' })
     await expect(exportGuestsHandler(event)).rejects.toMatchObject({ statusCode: 401 })
+  })
+
+  it('POST /api/admin/guests rejects an unauthenticated request with 401', async () => {
+    const event = createMockEvent({ method: 'POST', body: {} })
+    await expect(createGuestHandler(event)).rejects.toMatchObject({ statusCode: 401 })
   })
 })
