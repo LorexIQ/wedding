@@ -40,4 +40,30 @@ describe('schema', () => {
       db.insert(adminUsers).values({ login: 'bride', passwordHash: 'y' }).run()
     ).toThrow()
   })
+
+  it('invite_code уникален, submitted/envelopeOpened по умолчанию false', () => {
+    const db = createTestDb()
+    const now = new Date()
+
+    const guest = db.insert(guests).values({
+      fio: null,
+      phone: null,
+      comment: null,
+      drinks: [],
+      inviteCode: 'ABC1234567',
+      createdAt: now,
+      updatedAt: now
+    }).returning().get()
+
+    expect(guest.submitted).toBe(false)
+    expect(guest.envelopeOpened).toBe(false)
+    expect(guest.fio).toBeNull()
+
+    expect(() =>
+      db.insert(guests).values({
+        fio: null, phone: null, comment: null, drinks: [],
+        inviteCode: 'ABC1234567', createdAt: now, updatedAt: now
+      }).run()
+    ).toThrow()
+  })
 })

@@ -2,7 +2,7 @@ import { stringify } from 'csv-stringify/sync'
 
 interface GuestRow {
   id: number
-  fio: string
+  fio: string | null
   phone: string | null
   comment: string | null
   drinks: string[]
@@ -28,7 +28,7 @@ export function guestsToCsv(guestRows: GuestRow[]): string {
     const companionsText = guest.companions.map((c) => `${c.fio} (${c.drinks.join('; ')})`).join(' | ')
     records.push([
       String(guest.id),
-      neutralizeFormulaInjection(guest.fio),
+      neutralizeFormulaInjection(guest.fio ?? ''),
       guest.phone ?? '',
       neutralizeFormulaInjection(guest.comment ?? ''),
       guest.drinks.join('; '),

@@ -2,10 +2,13 @@ import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
 
 export const guests = sqliteTable('guests', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  fio: text('fio').notNull(),
+  fio: text('fio'),
   phone: text('phone'),
   comment: text('comment'),
   drinks: text('drinks', { mode: 'json' }).$type<string[]>().notNull().default([]),
+  inviteCode: text('invite_code').unique(),
+  submitted: integer('submitted', { mode: 'boolean' }).notNull().default(false),
+  envelopeOpened: integer('envelope_opened', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull()
 })

@@ -9,10 +9,13 @@ export function createTestDb() {
   sqlite.exec(`
     CREATE TABLE guests (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      fio TEXT NOT NULL,
+      fio TEXT,
       phone TEXT,
       comment TEXT,
       drinks TEXT NOT NULL DEFAULT '[]',
+      invite_code TEXT UNIQUE,
+      submitted INTEGER NOT NULL DEFAULT 0,
+      envelope_opened INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
