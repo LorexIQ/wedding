@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
+import {
+  CONFETTI_COLORS,
+  CONFETTI_GRAVITY,
+  CONFETTI_DRAG,
+  CONFETTI_SPARK_COUNT,
+  CONFETTI_RIBBON_COUNT,
+  CONFETTI_SALVO
+} from '../utils/confettiConfig'
 
 /**
- * Салют при заходе на страницу: снаряды взлетают от левого и правого
- * края, на вершине разрываются веером искр и лент.
- *
- * Работает один раз за визит, поверх страницы и мимо кликов. При
- * `prefers-reduced-motion` не запускается вовсе — вспышки движения
- * бьют по тем, кому от них плохо.
+ * Салют: снаряды взлетают от левого и правого края, на вершине
+ * разрываются веером искр и лент. Не запускается сама — вызывающий
+ * код зовёт fire() (см. defineExpose ниже), когда решит, что пора.
+ * При `prefers-reduced-motion` fire() ничего не делает — вспышки
+ * движения бьют по тем, кому от них плохо.
  */
 
 const canvas = ref<HTMLCanvasElement | null>(null)
-const done = ref(false)
-
-// Цвета из палитры приглашения: на льняном фоне яркая радуга выглядит
-// чужой, а шалфейная зелень с айвори читается как часть оформления.
-const COLORS = ['#7C8A6E', '#93A47F', '#C7CEB9', '#E8ECDF', '#FBFAF6']
-
-const GRAVITY = 620
-const DRAG = 0.86
+const done = ref(true)
 
 type Kind = 'shell' | 'spark' | 'ribbon'
 
@@ -39,6 +39,10 @@ interface Particle {
 let particles: Particle[] = []
 let raf = 0
 let stopped = false
+let fired = false
+let ctx: CanvasRenderingContext2D | null = null
+let w = 0
+let h = 0
 
 function rand(min: number, max: number) {
   return min + Math.random() * (max - min)
@@ -49,7 +53,7 @@ function pick<T>(list: readonly T[]): T {
 }
 
 /** Снаряд, летящий вверх от края экрана к центру. */
-function launchShell(fromLeft: boolean, w: number, h: number): Particle {
+function launchShell(fromLeft: boolean): Particle {
   const edge = fromLeft ? rand(0.04, 0.14) : rand(0.86, 0.96)
   const inward = fromLeft ? rand(120, 260) : rand(-260, -120)
 
@@ -60,7 +64,7 @@ function launchShell(fromLeft: boolean, w: number, h: number): Particle {
     vy: -rand(760, 940),
     life: 0,
     maxLife: rand(0.85, 1.15),
-    color: pick(COLORS),
+    color: pick(CONFETTI_COLORS),
     size: 3,
     angle: 0,
     spin: 0,
@@ -70,7 +74,7 @@ function launchShell(fromLeft: boolean, w: number, h: number): Particle {
 
 /** Разрыв: плотный веер искр и несколько крутящихся лент. */
 function burst(at: Particle) {
-  const sparks = Math.round(rand(54, 78))
+  const sparks = Math.round(rand(CONFETTI_SPARK_COUNT.min, CONFETTI_SPARK_COUNT.max))
   for (let i = 0; i < sparks; i += 1) {
     const angle = (Math.PI * 2 * i) / sparks + rand(-0.06, 0.06)
     const speed = rand(90, 320)
@@ -81,7 +85,7 @@ function burst(at: Particle) {
       vy: Math.sin(angle) * speed,
       life: 0,
       maxLife: rand(0.9, 1.7),
-      color: Math.random() < 0.75 ? at.color : pick(COLORS),
+      color: Math.random() < 0.75 ? at.color : pick(CONFETTI_COLORS),
       size: rand(1.6, 3.2),
       angle: 0,
       spin: 0,
@@ -89,7 +93,7 @@ function burst(at: Particle) {
     })
   }
 
-  for (let i = 0; i < 16; i += 1) {
+  for (let i = 0; i < CONFETTI_RIBBON_COUNT; i += 1) {
     const angle = rand(0, Math.PI * 2)
     const speed = rand(60, 200)
     particles.push({
@@ -99,7 +103,7 @@ function burst(at: Particle) {
       vy: Math.sin(angle) * speed,
       life: 0,
       maxLife: rand(1.6, 2.6),
-      color: pick(COLORS),
+      color: pick(CONFETTI_COLORS),
       size: rand(4, 8),
       angle: rand(0, Math.PI),
       spin: rand(-7, 7),
@@ -108,54 +112,47 @@ function burst(at: Particle) {
   }
 }
 
-onMounted(() => {
+function resize() {
+  const el = canvas.value
+  if (!el || !ctx) return
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  w = window.innerWidth
+  h = window.innerHeight
+  el.width = Math.floor(w * dpr)
+  el.height = Math.floor(h * dpr)
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+}
+
+/** Запускает салют. Безопасно звать один раз; повторные вызовы игнорируются. */
+function fire() {
+  if (fired) return
   const el = canvas.value
   if (!el) return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    done.value = true
-    return
-  }
-
-  const ctx = el.getContext('2d')
+  fired = true
+  ctx = el.getContext('2d')
   if (!ctx) return
 
-  let w = 0
-  let h = 0
-
-  function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    w = window.innerWidth
-    h = window.innerHeight
-    el!.width = Math.floor(w * dpr)
-    el!.height = Math.floor(h * dpr)
-    ctx!.setTransform(dpr, 0, 0, dpr, 0, 0)
-  }
-
+  done.value = false
   resize()
   window.addEventListener('resize', resize)
 
-  // Залпы вразнобой: одновременные выстрелы читаются как глитч,
-  // а сдвиг в полсекунды — как праздник.
-  const salvo: Array<[number, boolean]> = [
-    [0.15, true], [0.42, false],
-    [1.15, true], [1.48, false],
-    [2.25, true], [2.40, false]
-  ]
-  let fired = 0
+  const salvo = CONFETTI_SALVO
+  let salvoFired = 0
   let elapsed = 0
   let last = performance.now()
 
   function frame(now: number) {
-    if (stopped) return
+    if (stopped || !ctx) return
 
     const dt = Math.min((now - last) / 1000, 0.05)
     last = now
     elapsed += dt
 
-    while (fired < salvo.length && elapsed >= salvo[fired]![0]) {
-      particles.push(launchShell(salvo[fired]![1], w, h))
-      fired += 1
+    while (salvoFired < salvo.length && elapsed >= salvo[salvoFired]![0]) {
+      particles.push(launchShell(salvo[salvoFired]![1]))
+      salvoFired += 1
     }
 
     ctx!.clearRect(0, 0, w, h)
@@ -167,7 +164,7 @@ onMounted(() => {
       if (p.kind === 'shell') {
         p.x += p.vx * dt
         p.y += p.vy * dt
-        p.vy += GRAVITY * dt * 0.55
+        p.vy += CONFETTI_GRAVITY * dt * 0.55
 
         if (p.life >= p.maxLife || p.vy >= 0) {
           burst(p)
@@ -183,9 +180,9 @@ onMounted(() => {
         continue
       }
 
-      const drag = DRAG ** (dt * 60)
+      const drag = CONFETTI_DRAG ** (dt * 60)
       p.vx *= drag
-      p.vy = p.vy * drag + GRAVITY * dt
+      p.vy = p.vy * drag + CONFETTI_GRAVITY * dt
       p.x += p.vx * dt
       p.y += p.vy * dt
 
@@ -213,7 +210,7 @@ onMounted(() => {
 
     particles = alive
 
-    if (fired >= salvo.length && particles.length === 0) {
+    if (salvoFired >= salvo.length && particles.length === 0) {
       ctx!.clearRect(0, 0, w, h)
       done.value = true
       window.removeEventListener('resize', resize)
@@ -224,13 +221,15 @@ onMounted(() => {
   }
 
   raf = requestAnimationFrame(frame)
+}
 
-  onUnmounted(() => {
-    stopped = true
-    cancelAnimationFrame(raf)
-    window.removeEventListener('resize', resize)
-  })
+onUnmounted(() => {
+  stopped = true
+  cancelAnimationFrame(raf)
+  window.removeEventListener('resize', resize)
 })
+
+defineExpose({ fire })
 </script>
 
 <template>
