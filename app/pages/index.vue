@@ -31,6 +31,10 @@ onMounted(() => {
 })
 
 function onEnvelopeOpened() {
+  if (inviteGuest.value) {
+    inviteGuest.value.envelopeOpened = true
+  }
+
   confettiRef.value?.fire()
 
   const code = inviteCode.value
