@@ -21,7 +21,7 @@ export async function createGuestInvite(input: GuestCreateInput, dbInstance: typ
   const now = new Date()
   const inviteCode = createUniqueInviteCode(dbInstance)
 
-  return dbInstance.insert(guests).values({
+  const created = dbInstance.insert(guests).values({
     fio: input.fio || null,
     phone: input.phone || null,
     comment: input.comment || null,
@@ -32,6 +32,11 @@ export async function createGuestInvite(input: GuestCreateInput, dbInstance: typ
     createdAt: now,
     updatedAt: now
   }).returning().get()
+
+  // Match the shape listGuests() produces (server/api/admin/guests/index.get.ts) so the
+  // admin table never receives a guest row without a `companions` key. A freshly created
+  // invite never has companions yet, so an empty array is always correct here.
+  return { ...created, companions: [] as { id: number, fio: string, drinks: string[] }[] }
 }
 
 export default defineEventHandler(async (event) => {

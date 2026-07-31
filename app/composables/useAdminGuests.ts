@@ -35,6 +35,8 @@ export function useAdminGuests() {
 
   async function createGuestInvite(input: GuestCreateInput) {
     const requestFetch = useRequestFetch()
+    // The server now returns a full GuestRecord (including companions: []), matching
+    // listGuests()'s shape, so the fetch generic alone is enough — no extra cast needed.
     const created = await requestFetch<GuestRecord>('/api/admin/guests', { method: 'POST', body: input })
     guestsList.value.push(created)
     return created

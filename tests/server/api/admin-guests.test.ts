@@ -132,6 +132,14 @@ describe('createGuestInvite (POST /api/admin/guests)', () => {
     expect(created.drinks).toEqual(['red_dry'])
     expect(created.phone).toBeNull()
   })
+
+  it('возвращает те же ключи, что и listGuests (не даёт двум источникам данных админки разойтись)', async () => {
+    const testDb = createTestDb()
+    const created = await createGuestInvite({}, testDb)
+    const listed = await listGuests(testDb)
+
+    expect(Object.keys(created).sort()).toEqual(Object.keys(listed[0]!).sort())
+  })
 })
 
 describe('updateGuest — переключение флагов submitted/envelopeOpened', () => {
