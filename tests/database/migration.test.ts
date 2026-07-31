@@ -1,8 +1,13 @@
 import { describe, it, expect } from 'vitest'
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import Database from 'better-sqlite3'
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import * as schema from '../../server/database/schema'
+
+const REAL_MIGRATIONS_FOLDER = './server/database/migrations'
 
 describe('migration verification', () => {
   it('migrations 0000 and 0001 apply successfully and create correct schema', () => {
@@ -79,6 +84,71 @@ describe('migration verification', () => {
         updatedAt: new Date()
       }).run()
     }).toThrow()
+
+    sqlite.close()
+  })
+
+  it('preserves pre-existing companion rows when migration 0001 recreates the guests table (production upgrade scenario)', () => {
+    // This reproduces the real-world upgrade path: a database that already has data
+    // from migration 0000 (guests without invite_code/submitted/envelope_opened, plus
+    // companions referencing them via an ON DELETE CASCADE foreign key), then migration
+    // 0001 runs on top of it. Unlike the test above (which seeds data AFTER migrating,
+    // the safe path), this seeds data BEFORE migration 0001 runs — the actual production
+    // scenario where migration 0001's table-recreate strategy for `guests` (DROP TABLE
+    // guests) can cascade-delete every companion row if foreign key enforcement is not
+    // correctly suspended for the duration of the migration transaction.
+    const sqlite = new Database(':memory:')
+    sqlite.pragma('foreign_keys = ON')
+    const db = drizzle(sqlite, { schema })
+
+    // Apply ONLY migration 0000 first, via a temp migrations folder containing just
+    // that one migration + a matching journal, to simulate a pre-0001 database.
+    const tempDir = mkdtempSync(join(tmpdir(), 'migration-0000-only-'))
+    try {
+      mkdirSync(join(tempDir, 'meta'), { recursive: true })
+      const journal = JSON.parse(readFileSync(join(REAL_MIGRATIONS_FOLDER, 'meta/_journal.json'), 'utf-8'))
+      const firstEntry = journal.entries[0]
+      writeFileSync(join(tempDir, 'meta/_journal.json'), JSON.stringify({ ...journal, entries: [firstEntry] }))
+      writeFileSync(
+        join(tempDir, `${firstEntry.tag}.sql`),
+        readFileSync(join(REAL_MIGRATIONS_FOLDER, `${firstEntry.tag}.sql`))
+      )
+
+      migrate(db, { migrationsFolder: tempDir })
+    } finally {
+      rmSync(tempDir, { recursive: true, force: true })
+    }
+
+    // Seed a guest + companion using RAW SQL matching the pre-migration (0000-only)
+    // schema — drizzle's typed schema.guests already expects post-0001 columns
+    // (invite_code, submitted, envelope_opened) that don't exist on the table yet.
+    const now = Date.now()
+    sqlite.prepare(
+      'INSERT INTO guests (fio, phone, comment, drinks, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run('Иванов Иван', '+79990000000', 'Test', '["red_dry"]', now, now)
+    sqlite.prepare(
+      'INSERT INTO companions (guest_id, fio, drinks) VALUES (?, ?, ?)'
+    ).run(1, 'Петров Пётр', '["white_dry"]')
+
+    // Now run the real migrations folder, wrapped the same way server/plugins/00.migrate.ts
+    // wraps it: foreign key enforcement toggled off at the connection level around the
+    // migrate() call. Migration 0000 is already recorded as applied and will be skipped;
+    // migration 0001 actually runs and must NOT cascade-delete the companion row when it
+    // drops and recreates `guests`.
+    sqlite.pragma('foreign_keys = OFF')
+    try {
+      migrate(db, { migrationsFolder: REAL_MIGRATIONS_FOLDER })
+    } finally {
+      sqlite.pragma('foreign_keys = ON')
+    }
+
+    const guestsAfter = db.select().from(schema.guests).all()
+    expect(guestsAfter).toHaveLength(1)
+    expect(guestsAfter[0].fio).toBe('Иванов Иван')
+
+    const companionsAfter = db.select().from(schema.companions).all()
+    expect(companionsAfter).toHaveLength(1)
+    expect(companionsAfter[0].fio).toBe('Петров Пётр')
 
     sqlite.close()
   })
