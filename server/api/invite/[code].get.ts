@@ -1,13 +1,19 @@
-import { defineEventHandler, getRouterParam, createError } from 'h3'
+import { defineEventHandler, getRouterParam, getRequestHeader, getRequestIP, createError } from 'h3'
 import { eq } from 'drizzle-orm'
 import { db } from '../../database/client'
 import { guests } from '../../database/schema'
+import { checkRateLimit } from '../../utils/rateLimit'
 
 export function resolveInvite(code: string, dbInstance: typeof db = db) {
   return dbInstance.select().from(guests).where(eq(guests.inviteCode, code)).get() ?? null
 }
 
 export default defineEventHandler(async (event) => {
+  const ip = getRequestHeader(event, 'cf-connecting-ip') || getRequestIP(event) || 'unknown'
+  if (!checkRateLimit(`invite:${ip}`, 20, 60_000)) {
+    throw createError({ statusCode: 429, statusMessage: 'Слишком много попыток, попробуйте позже' })
+  }
+
   const code = getRouterParam(event, 'code')
   if (!code) {
     throw createError({ statusCode: 400, statusMessage: 'Код не указан' })

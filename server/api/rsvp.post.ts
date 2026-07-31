@@ -26,6 +26,10 @@ export async function submitRsvp(rawInput: unknown, inviteCode: string | undefin
     return { ok: false as const, status: 404, message: 'Приглашение не найдено' }
   }
 
+  if (existing.submitted) {
+    return { ok: false as const, status: 409, message: 'Вы уже отправили ответ' }
+  }
+
   const now = new Date()
   const data = parsed.data
 
@@ -69,5 +73,5 @@ export default defineEventHandler(async (event) => {
   }
 
   setResponseStatus(event, 201)
-  return { id: result.guestId }
+  return { ok: true }
 })

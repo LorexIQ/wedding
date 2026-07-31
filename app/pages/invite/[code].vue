@@ -4,7 +4,7 @@ const code = String(route.params.code)
 const inviteCode = useInviteCode()
 
 try {
-  await $fetch(`/api/invite/${code}`)
+  await $fetch(`/api/invite/${encodeURIComponent(code)}`)
   inviteCode.value = code
   await navigateTo('/')
 } catch {

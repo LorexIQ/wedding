@@ -10,8 +10,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const requestFetch = useRequestFetch()
   try {
-    const guest = await requestFetch(`/api/invite/${inviteCode.value}`)
-    useState('inviteGuest', () => guest)
+    const guest = await requestFetch(`/api/invite/${encodeURIComponent(inviteCode.value)}`)
+    // Assign explicitly on every run, not just the first. useState()'s initializer only
+    // runs once per key, so a second client-side visit (a different invite link opened
+    // in the same session) would otherwise keep the first guest's stale data even though
+    // the cookie and /api/rsvp now point at a different guest.
+    useState('inviteGuest').value = guest
   } catch {
     return navigateTo('/not-invited')
   }

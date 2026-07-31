@@ -15,6 +15,7 @@ interface MockEventOptions {
   body?: unknown
   authenticated?: boolean
   sessionName?: string
+  headers?: Record<string, string>
 }
 
 export function createMockEvent(opts: MockEventOptions = {}): H3Event {
@@ -23,7 +24,10 @@ export function createMockEvent(opts: MockEventOptions = {}): H3Event {
   const req: any = {
     method: opts.method ?? 'GET',
     url: '/',
-    headers: rawBody ? { 'content-type': 'application/json' } : {},
+    headers: {
+      ...(rawBody ? { 'content-type': 'application/json' } : {}),
+      ...opts.headers
+    },
     rawBody,
     socket: { remoteAddress: '127.0.0.1' }
   }

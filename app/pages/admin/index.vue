@@ -28,13 +28,18 @@ function cancelEdit() {
 }
 
 async function saveEdit(id: number) {
-  await patchGuest(id, {
-    fio: formatFio(editForm.fio),
-    phone: editForm.phone,
-    comment: editForm.comment,
-    drinks: editForm.drinks
-  })
-  editingId.value = null
+  try {
+    await patchGuest(id, {
+      fio: formatFio(editForm.fio),
+      phone: editForm.phone,
+      comment: editForm.comment,
+      drinks: editForm.drinks
+    })
+    editingId.value = null
+  } catch (e) {
+    console.error(e)
+    alert('Не удалось сохранить: не получилось обновить гостя')
+  }
 }
 
 function startCreate() {
@@ -50,25 +55,64 @@ function cancelCreate() {
 }
 
 async function confirmCreate() {
-  await createGuestInvite({
-    fio: formatFio(draft.fio) || undefined,
-    phone: draft.phone || undefined,
-    comment: draft.comment || undefined,
-    drinks: draft.drinks
-  })
-  creating.value = false
+  try {
+    await createGuestInvite({
+      fio: formatFio(draft.fio) || undefined,
+      phone: draft.phone || undefined,
+      comment: draft.comment || undefined,
+      drinks: draft.drinks
+    })
+    creating.value = false
+  } catch (e) {
+    console.error(e)
+    alert('Не удалось сохранить: не получилось создать приглашение')
+  }
 }
 
-async function toggleSubmitted(guest: GuestRecord) {
-  await patchGuest(guest.id, { submitted: !guest.submitted })
+async function toggleSubmitted(guest: GuestRecord, event: Event) {
+  try {
+    await patchGuest(guest.id, { submitted: !guest.submitted })
+  } catch (e) {
+    console.error(e)
+    // guest.submitted never changed on failure, but the browser already flipped the
+    // checkbox's native checked state on click regardless of the :checked binding
+    // (that's native <input type="checkbox"> behavior, independent of Vue) — and since
+    // the bound value truly didn't change, Vue won't re-render to reassert it. Reset
+    // the DOM element directly so the checkbox doesn't lie about the saved state.
+    const input = event.target as HTMLInputElement
+    input.checked = guest.submitted
+    alert('Не удалось сохранить: не получилось обновить статус ответа')
+  }
 }
 
-async function toggleEnvelopeOpened(guest: GuestRecord) {
-  await patchGuest(guest.id, { envelopeOpened: !guest.envelopeOpened })
+async function toggleEnvelopeOpened(guest: GuestRecord, event: Event) {
+  try {
+    await patchGuest(guest.id, { envelopeOpened: !guest.envelopeOpened })
+  } catch (e) {
+    console.error(e)
+    const input = event.target as HTMLInputElement
+    input.checked = guest.envelopeOpened
+    alert('Не удалось сохранить: не получилось обновить статус конверта')
+  }
 }
 
 async function copyLink(guest: GuestRecord) {
-  await navigator.clipboard.writeText(`${location.origin}/invite/${guest.inviteCode}`)
+  try {
+    await navigator.clipboard.writeText(`${location.origin}/invite/${guest.inviteCode}`)
+    alert('Ссылка скопирована')
+  } catch (e) {
+    console.error(e)
+    alert('Не удалось сохранить: не получилось скопировать ссылку')
+  }
+}
+
+async function removeGuestSafe(id: number) {
+  try {
+    await removeGuest(id)
+  } catch (e) {
+    console.error(e)
+    alert('Не удалось сохранить: не получилось удалить гостя')
+  }
 }
 
 async function onLogout() {
@@ -117,12 +161,12 @@ async function onLogout() {
             <td>{{ guest.drinks.join(', ') }}</td>
             <td>{{ guest.companions.map((c) => c.fio).join(', ') }}</td>
             <td>{{ guest.comment }}</td>
-            <td><input type="checkbox" :checked="guest.submitted" @change="toggleSubmitted(guest)"></td>
-            <td><input type="checkbox" :checked="guest.envelopeOpened" @change="toggleEnvelopeOpened(guest)"></td>
-            <td><button @click="copyLink(guest)">Скопировать ссылку</button></td>
+            <td><input type="checkbox" :checked="guest.submitted" @change="toggleSubmitted(guest, $event)"></td>
+            <td><input type="checkbox" :checked="guest.envelopeOpened" @change="toggleEnvelopeOpened(guest, $event)"></td>
+            <td><button :disabled="!guest.inviteCode" @click="copyLink(guest)">Скопировать ссылку</button></td>
             <td>
               <button @click="startEdit(guest)">Изменить</button>
-              <button @click="removeGuest(guest.id)">Удалить</button>
+              <button @click="removeGuestSafe(guest.id)">Удалить</button>
             </td>
           </template>
         </tr>
@@ -138,7 +182,7 @@ async function onLogout() {
           </td>
           <td></td>
           <td><textarea v-model="draft.comment" placeholder="Комментарий" /></td>
-          <td colspan="2"></td>
+          <td colspan="3"></td>
           <td>
             <button @click="confirmCreate">✓</button>
             <button @click="cancelCreate">✗</button>

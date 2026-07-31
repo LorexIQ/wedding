@@ -37,7 +37,7 @@ describe('submitRsvp', () => {
     expect(rows[0].submitted).toBe(true)
   })
 
-  it('заменяет спутников при повторной отправке', async () => {
+  it('заменяет спутников, если админ переоткрыл форму (submitted сброшен в false)', async () => {
     const testDb = createTestDb()
     seedInvite(testDb)
 
@@ -46,6 +46,11 @@ describe('submitRsvp', () => {
       companions: [{ fio: 'Первый спутник', drinks: [] }],
       website: ''
     }, 'ABC1234567', { dbInstance: testDb })
+
+    // Simulate the admin unchecking `submitted` to reopen the form for this guest —
+    // otherwise the second submission would correctly be rejected with 409 (see the
+    // "отклоняет повторную отправку" test below).
+    testDb.update(guests).set({ submitted: false }).where(eq(guests.inviteCode, 'ABC1234567')).run()
 
     await submitRsvp({
       fio: 'Иванов Иван', drinks: [],
@@ -58,6 +63,29 @@ describe('submitRsvp', () => {
 
     expect(rows).toHaveLength(1)
     expect(rows[0].fio).toBe('Второй спутник')
+  })
+
+  it('отклоняет повторную отправку с 409, если submitted уже true', async () => {
+    const testDb = createTestDb()
+    seedInvite(testDb)
+
+    const first = await submitRsvp({
+      fio: 'Иванов Иван', drinks: [],
+      companions: [{ fio: 'Первый спутник', drinks: [] }],
+      website: ''
+    }, 'ABC1234567', { dbInstance: testDb })
+    expect(first.ok).toBe(true)
+
+    const second = await submitRsvp({
+      fio: 'Иванов Иван', drinks: [],
+      companions: [{ fio: 'Второй спутник', drinks: [] }],
+      website: ''
+    }, 'ABC1234567', { dbInstance: testDb })
+
+    expect(second.ok).toBe(false)
+    if (!second.ok) {
+      expect(second.status).toBe(409)
+    }
   })
 
   it('404 при отсутствии кода приглашения', async () => {
