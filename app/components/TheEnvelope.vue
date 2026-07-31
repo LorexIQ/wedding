@@ -30,6 +30,8 @@ const gateStyle = {
 }
 
 let hintTimer = 0
+let flapTimer = 0
+let slideTimer = 0
 
 function onOpen() {
   if (opening.value) return
@@ -44,9 +46,9 @@ function onOpen() {
   }
 
   flapOpen.value = true
-  window.setTimeout(() => {
+  flapTimer = window.setTimeout(() => {
     sliding.value = true
-    window.setTimeout(() => {
+    slideTimer = window.setTimeout(() => {
       closed.value = true
       emit('opened')
     }, SLIDE_DURATION_MS)
@@ -63,6 +65,8 @@ onMounted(() => {
 onUnmounted(() => {
   document.body.style.overflow = ''
   window.clearTimeout(hintTimer)
+  window.clearTimeout(flapTimer)
+  window.clearTimeout(slideTimer)
 })
 </script>
 
@@ -164,7 +168,7 @@ onUnmounted(() => {
   background: var(--sage);
   color: var(--paper);
   font-size: 20px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 3px 6px rgba(54, 59, 50, 0.2);
 }
 
 .envelope__seal--pulse::after {

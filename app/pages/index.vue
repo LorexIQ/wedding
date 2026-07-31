@@ -49,7 +49,7 @@ function onEnvelopeOpened() {
 <template>
   <main>
     <TheConfetti ref="confettiRef" />
-    <TheEnvelope v-if="!inviteGuest?.envelopeOpened" @opened="onEnvelopeOpened" />
+    <TheEnvelope v-if="inviteGuest?.envelopeOpened === false" @opened="onEnvelopeOpened" />
 
     <TheHero />
     <OurStory v-reveal />
