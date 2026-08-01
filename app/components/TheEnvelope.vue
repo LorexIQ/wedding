@@ -7,21 +7,26 @@ import { wedding } from '../content/wedding'
  * "Envelope Invite"), адаптированный под Vue и под то, что вместо
  * плейсхолдерного письма с RSVP разворачивается настоящий сайт (слот).
  *
+ * Движется КОНВЕРТ, а не лист. Лист неподвижен в центре рамки от первого
+ * кадра до последнего — рамка отцентрирована во вьюпорте, значит лист не
+ * может уехать за его край ни при какой ширине экрана. Прошлый вариант
+ * (лист выезжает вверх) на узких экранах выносил его за пределы viewport.
+ *
  * Последовательность:
  * 1. Флап (48% высоты рамки) переворачивается 3D, двухслойный (лицо +
  *    заранее перевёрнутая изнанка) — не пропадает между 90°/180°.
  *    С полпути (48% длительности) перестаёт быть "поверх" — z-index.
- * 2. Карточка-письмо выезжает вверх из кармана (translateY 48% → -84%),
- *    пока конверт стоит на месте — только сдвиг, без масштаба. Едет,
- *    пока её низ не поднимется выше кромки кармана: лист вынут целиком.
- *    Карман (непрозрачный, z выше листа) сам заслоняет ту часть, что ещё
- *    внутри — поэтому лист не "просвечивает сквозь" конверт.
- * 3. FLIP прямо из этого кадра, конверт НИКУДА не уезжает и остаётся на
- *    экране: карточка-письмо прячется, её место (по реальным координатам
- *    getBoundingClientRect) занимает slot-контент (настоящий сайт),
- *    снапается на невидимый кадр к тем же координатам и уезжает
- *    transform'ом к 0/100% — вырастает в нормальный поток документа,
- *    попутно накрывая собой оставшийся конверт.
+ *    Пока он открывается, в вырезе передней стенки показывается клин
+ *    лежащего внутри листа — единственное, что от листа видно.
+ * 2. Конверт целиком уезжает вниз, а лист гасит этот сдвиг встречным
+ *    transform'ом и остаётся на месте: передняя стенка сползает с листа
+ *    и открывает его сверху вниз. Заслоняет лист сама стенка —
+ *    непрозрачный элемент выше по z, — а не маска.
+ * 3. FLIP из этого кадра: карточка-письмо прячется, её место (по реальным
+ *    координатам getBoundingClientRect) занимает slot-контент (настоящий
+ *    сайт), снапается на невидимый кадр к тем же координатам и уезжает
+ *    transform'ом к 0/100% — вырастает в нормальный поток документа.
+ *    Лист лежит в центре экрана, поэтому и зум идёт из центра.
  *
  * `envelopeOpened` — разовый флаг, назад в конверт пути нет.
  * `prefers-reduced-motion` — всё схлопывается в один кадр.
@@ -32,22 +37,23 @@ const emit = defineEmits<{ opened: [] }>()
 
 const SPEED_MS = 950
 const FLAP_HANDOFF_MS = Math.round(SPEED_MS * 0.48)
-const REVEAL_DELAY_MS = Math.round(SPEED_MS * 1.35) + 500
-const CARD_SLIDE_MS = Math.round(SPEED_MS * 1.05)
-const CARD_SLIDE_DELAY_MS = Math.round(SPEED_MS * 0.3)
+/** Пауза после открытия флапа — на неё видно лист в вырезе, до отъезда конверта. */
+const REVEAL_DELAY_MS = Math.round(SPEED_MS * 1.15)
+/** = длительность transform-перехода .envelope-visual--leaving и встречного ему .letter-clip--counter. */
+const ENVELOPE_EXIT_MS = 900
 const FLIP_MS = 750
 
 const open = ref(false)
 const flapOnTop = ref(true)
 const opening = ref(false)
+const envelopeLeaving = ref(false)
 const pageGrowing = ref(false)
 const revealed = ref(props.alreadyOpened)
 const showHint = ref(false)
 
 const gateStyle = {
   '--speed': `${SPEED_MS}ms`,
-  '--card-slide-duration': `${CARD_SLIDE_MS}ms`,
-  '--card-slide-delay': `${CARD_SLIDE_DELAY_MS}ms`
+  '--envelope-exit': `${ENVELOPE_EXIT_MS}ms`
 }
 
 const peekCard = ref<HTMLElement | null>(null)
@@ -55,6 +61,7 @@ const siteWrap = ref<HTMLElement | null>(null)
 
 let hintTimer = 0
 let handoffTimer = 0
+let envelopeExitTimer = 0
 let growTimer = 0
 
 function finishReveal() {
@@ -62,8 +69,7 @@ function finishReveal() {
   emit('opened')
 }
 
-/** Шаг 3: FLIP карточки-письма в настоящий сайт. Конверт остаётся на экране —
-    растущий slot-контент накрывает его сам. */
+/** Шаг 3: FLIP карточки-письма в настоящий сайт. Конверт к этому моменту уже уехал. */
 function growPage() {
   const card = peekCard.value
   const wrap = siteWrap.value
@@ -95,6 +101,12 @@ function growPage() {
   window.setTimeout(finishReveal, FLIP_MS)
 }
 
+/** Шаг 2: конверт уезжает вниз, лист встречным transform'ом стоит на месте. */
+function startEnvelopeExit() {
+  envelopeLeaving.value = true
+  envelopeExitTimer = window.setTimeout(growPage, ENVELOPE_EXIT_MS)
+}
+
 function onOpen() {
   if (opening.value || props.alreadyOpened) return
   opening.value = true
@@ -110,7 +122,7 @@ function onOpen() {
   handoffTimer = window.setTimeout(() => {
     flapOnTop.value = false
   }, FLAP_HANDOFF_MS)
-  growTimer = window.setTimeout(growPage, REVEAL_DELAY_MS)
+  growTimer = window.setTimeout(startEnvelopeExit, REVEAL_DELAY_MS)
 }
 
 onMounted(() => {
@@ -123,6 +135,7 @@ onMounted(() => {
 onUnmounted(() => {
   window.clearTimeout(hintTimer)
   window.clearTimeout(handoffTimer)
+  window.clearTimeout(envelopeExitTimer)
   window.clearTimeout(growTimer)
 })
 </script>
@@ -155,24 +168,22 @@ onUnmounted(() => {
     >
       <span v-if="!open" class="envelope__hint-text">Откройте письмо</span>
 
-      <!-- Конверт (панель, карман, флап) + лежащее в нём письмо — единая
-           группа, неподвижная от начала и до конца. Письмо ОБЯЗАНО лежать
-           здесь, а не снаружи: .envelope-visual формирует стековый контекст
-           (perspective), поэтому z-index кармана виден только изнутри.
-           Только так карман — реальный непрозрачный элемент — физически
-           заслоняет письмо, вместо имитации масками. -->
-      <div class="envelope-visual">
+      <!-- Конверт (панель, стенка, флап) + лежащее в нём письмо — одна
+           группа, и уезжает вниз она целиком. Письмо ОБЯЗАНО лежать здесь,
+           а не снаружи: .envelope-visual формирует стековый контекст
+           (perspective), поэтому z-index передней стенки виден только
+           изнутри. Только так стенка — реальный непрозрачный элемент —
+           физически заслоняет письмо, вместо имитации масками. -->
+      <div class="envelope-visual" :class="{ 'envelope-visual--leaving': envelopeLeaving }">
         <div class="envelope__panel" />
 
-        <!-- Письмо: z=3 — выше задней панели (1), НИЖЕ кармана (4).
-             Видна ровно та его часть, что выше кромки кармана (top:30%);
-             всё, что ниже, закрыто самим карманом. Никаких clip-path:
-             лист не может "просвечивать сквозь" карман, потому что карман
-             непрозрачен и реально нарисован поверх. Вынимается лист тем,
-             что уезжает вверх выше кромки кармана — конверт при этом
-             стоит на месте. -->
-        <div class="letter-clip" :class="{ 'letter-clip--expanded': pageGrowing }">
-          <div v-if="!pageGrowing" ref="peekCard" class="peek-card" :class="{ 'peek-card--open': open }">
+        <!-- Письмо: z=3 — выше задней панели (1), НИЖЕ передней стенки (4),
+             которая его и закрывает. Само оно не двигается никогда: при
+             отъезде конверта гасит сдвиг родителя встречным transform'ом
+             (--counter), поэтому стоит в центре экрана, а стенка сползает
+             с него вниз. -->
+        <div class="letter-clip" :class="{ 'letter-clip--counter': envelopeLeaving }">
+          <div v-if="!pageGrowing" ref="peekCard" class="peek-card">
             <p class="peek-card__eyebrow">Приглашение</p>
             <h3 class="peek-card__title">{{ wedding.groom }} и {{ wedding.bride }}</h3>
           </div>
@@ -266,14 +277,23 @@ onUnmounted(() => {
   cursor: default;
 }
 
-/* Конверт неподвижен всю анимацию: лист вынимается из него сам, а в конце
-   растущий сайт просто накрывает конверт собой. perspective нужен флапу
-   и попутно делает этот узел стековым контекстом — именно поэтому письмо
-   лежит ВНУТРИ него (см. .letter-clip). */
+/* perspective нужен флапу и попутно делает этот узел стековым контекстом —
+   именно поэтому письмо лежит ВНУТРИ него (см. .letter-clip).
+   Без opacity-перехода: письмо — его потомок, прозрачность родителя гасила
+   бы и письмо тоже. Конверт просто съезжает за нижний край экрана. */
 .envelope-visual {
   position: absolute;
   inset: 0;
   perspective: 1800px;
+  transition: transform var(--envelope-exit) cubic-bezier(0.55, 0, 0.55, 1);
+}
+
+/* 100vh, а не проценты от своей высоты: конверт не растворяется, поэтому
+   обязан именно уехать ЗА край экрана — на процентах от собственной высоты
+   его низ оставался бы в кадре полосой. */
+.envelope-visual--leaving {
+  transform: translateY(100vh);
+  pointer-events: none;
 }
 
 .envelope__hint-text {
@@ -467,36 +487,32 @@ onUnmounted(() => {
   100% { transform: scale(1.7); opacity: 0; }
 }
 
-/* z=3 — выше задней панели (1), ниже кармана (4): карман сам заслоняет
-   ту часть письма, что "внутри" него. Никаких масок. */
-/* Ассиметричная коробка: снизу совпадает с рамкой, сверху уходит на целую
-   её высоту вверх. Так overflow:hidden режет ТОЛЬКО снизу — лист, пока он
-   в кармане, не торчит из-под конверта, — но не мешает ему подняться выше
-   верхнего края конверта, когда его вынимают. */
+/* z=3 — выше задней панели (1), ниже передней стенки (4): стенка сама
+   заслоняет письмо, пока оно внутри. Никаких масок. Коробка совпадает с
+   рамкой: письмо целиком помещается внутри и наружу не выходит. */
 .letter-clip {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: -100%;
-  height: 200%;
+  inset: 0;
   z-index: 3;
-  overflow: hidden;
   pointer-events: none;
+  transition: transform var(--envelope-exit) cubic-bezier(0.55, 0, 0.55, 1);
 }
 
-.letter-clip--expanded {
-  overflow: visible;
+/* Встречный сдвиг, гасящий отъезд конверта. Длительность и кривая ОБЯЗАНЫ
+   совпадать с .envelope-visual, а величина — быть той же с обратным знаком
+   (обе в vh, поэтому сравнимы буквально): тогда +100vh родителя и -100vh
+   потомка компенсируются на КАЖДОМ кадре, а не только в конце. Письмо
+   стоит неподвижно, стенка сползает с него вниз и открывает его. */
+.letter-clip--counter {
+  transform: translateY(-100vh);
 }
 
-/* Проценты считаются от .letter-clip, а он вдвое выше рамки (top:-100%,
-   height:200%). Поэтому в координатах САМОЙ рамки это по-прежнему
-   top:8%, height:88% — 54% = (100+8)/200, 44% = 88/200. */
 .peek-card {
   position: absolute;
   left: 11%;
-  top: 54%;
+  top: 6%;
   width: 78%;
-  height: 44%;
+  height: 88%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -509,19 +525,6 @@ onUnmounted(() => {
   border: 1px solid var(--rule);
   border-radius: 6px;
   box-shadow: 0 3px 10px rgba(54, 59, 50, 0.16);
-  transform: translateY(48%);
-  transition: transform var(--card-slide-duration) cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Проценты — от собственной высоты карточки (88% высоты рамки).
-   -100% = -88% высоты рамки: низ листа поднимается с 96% до 8%.
-   Почему именно так высоко: вырез передней стенки — треугольный, его край
-   на высоте y проходит по x = 50%·y/48%. Чтобы лист (11%..89% ширины) не
-   заходил углами за края выреза, его низ должен быть выше y ≈ 10.5%.
-   На 8% запас есть — лист выходит целиком, все четыре угла на виду. */
-.peek-card--open {
-  transform: translateY(-100%);
-  transition-delay: var(--card-slide-delay);
 }
 
 .peek-card__eyebrow {
