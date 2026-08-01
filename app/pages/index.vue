@@ -37,6 +37,10 @@ function onEnvelopeOpened() {
 
   confettiRef.value?.fire()
 
+  // Разовая пометка на сервере: конверт больше не покажется этому гостю.
+  // Не блокирует анимацию и намеренно не откатывает локальный флаг при
+  // ошибке — гость своё приглашение уже открыл, показывать конверт заново
+  // из-за упавшего запроса незачем.
   const code = inviteCode.value
   if (code) {
     $fetch(`/api/invite/${encodeURIComponent(code)}/open`, { method: 'POST' }).catch((error) => {
@@ -49,14 +53,15 @@ function onEnvelopeOpened() {
 <template>
   <main>
     <TheConfetti ref="confettiRef" />
-    <TheEnvelope v-if="inviteGuest?.envelopeOpened === false" @opened="onEnvelopeOpened" />
 
-    <TheHero />
-    <OurStory v-reveal />
-    <TheVenue v-reveal />
-    <GuestNotes v-reveal />
-    <TheCountdown v-reveal />
-    <RsvpForm v-reveal />
-    <TheFooter v-reveal />
+    <TheEnvelope :already-opened="inviteGuest?.envelopeOpened === true" @opened="onEnvelopeOpened">
+      <TheHero />
+      <OurStory v-reveal />
+      <TheVenue v-reveal />
+      <GuestNotes v-reveal />
+      <TheCountdown v-reveal />
+      <RsvpForm v-reveal />
+      <TheFooter v-reveal />
+    </TheEnvelope>
   </main>
 </template>
