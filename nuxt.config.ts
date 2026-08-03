@@ -1,3 +1,5 @@
+import { wedding } from './app/content/wedding'
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-30',
   devtools: { enabled: true },
@@ -21,7 +23,8 @@ export default defineNuxtConfig({
     dbPath: process.env.DB_PATH || './data/wedding.db',
     sessionSecret: process.env.SESSION_SECRET || '',
     public: {
-      metrikaId: process.env.METRIKA_ID || '111173886'
+      metrikaId: process.env.METRIKA_ID || '111173886',
+      contactPhone: process.env.CONTACT_PHONE || wedding.contactDigits
     }
   }
 })

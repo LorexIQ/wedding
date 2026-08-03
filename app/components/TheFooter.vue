@@ -5,6 +5,7 @@ import { formatPhone, maskPhone } from '../utils/phone'
 
 // Номер скрыт до клика, как в Telegram: примитивный парсер со страницы
 // его не соберёт, а гостю достаточно одного нажатия.
+const contactDigits = useRuntimeConfig().public.contactPhone
 const revealed = ref(false)
 </script>
 
@@ -15,15 +16,15 @@ const revealed = ref(false)
     <a
       v-if="revealed"
       class="foot__phone"
-      :href="`tel:+${wedding.contactDigits}`"
-    >{{ formatPhone(wedding.contactDigits) }}</a>
+      :href="`tel:+${contactDigits}`"
+    >{{ formatPhone(contactDigits) }}</a>
 
     <button
       v-else
       class="foot__phone foot__phone--masked"
       type="button"
       @click="revealed = true"
-    >{{ maskPhone(wedding.contactDigits) }}</button>
+    >{{ maskPhone(contactDigits) }}</button>
 
     <p v-if="!revealed" class="foot__hint">Нажмите, чтобы показать номер</p>
 
