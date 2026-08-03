@@ -4,6 +4,7 @@ import { db } from '../database/client'
 import { guests, companions } from '../database/schema'
 import { rsvpSchema } from '#shared/schemas/rsvp'
 import { checkRateLimit } from '../utils/rateLimit'
+import { getRsvpDeadline } from '../utils/settings'
 
 export async function submitRsvp(rawInput: unknown, inviteCode: string | undefined, opts: { dbInstance?: typeof db } = {}) {
   const database = opts.dbInstance ?? db
@@ -26,26 +27,34 @@ export async function submitRsvp(rawInput: unknown, inviteCode: string | undefin
     return { ok: false as const, status: 404, message: 'Приглашение не найдено' }
   }
 
-  if (existing.submitted) {
-    return { ok: false as const, status: 409, message: 'Вы уже отправили ответ' }
+  const deadline = getRsvpDeadline(database)
+  if (deadline && Date.now() >= deadline.getTime()) {
+    return { ok: false as const, status: 403, message: 'Редактирование ответа закрыто' }
+  }
+
+  const data = parsed.data
+  const attendingCompanions = data.attending ? data.companions : []
+
+  if (!existing.allowCompanions && attendingCompanions.length > 0) {
+    return { ok: false as const, status: 400, message: 'Спутники недоступны для этого приглашения' }
   }
 
   const now = new Date()
-  const data = parsed.data
 
   database.transaction((tx) => {
     tx.update(guests).set({
       fio: data.fio,
       phone: data.phone || null,
       comment: data.comment || null,
-      drinks: data.drinks,
+      attending: data.attending,
+      drinks: data.attending ? data.drinks : [],
       submitted: true,
       updatedAt: now
     }).where(eq(guests.id, existing.id)).run()
 
     tx.delete(companions).where(eq(companions.guestId, existing.id)).run()
 
-    for (const companion of data.companions) {
+    for (const companion of attendingCompanions) {
       tx.insert(companions).values({
         guestId: existing.id,
         fio: companion.fio,
