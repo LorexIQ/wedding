@@ -1,19 +1,37 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useAdminGuests, type GuestRecord } from '../../composables/useAdminGuests'
+import { useAdminSettings } from '../../composables/useAdminSettings'
 import { DRINK_OPTIONS, DRINK_LABELS } from '#shared/constants/drinks'
 import { formatFio } from '../../utils/formatFio'
 
 definePageMeta({ middleware: 'admin' })
 
 const { guestsList, loading, fetchGuests, createGuestInvite, patchGuest, removeGuest } = useAdminGuests()
-await fetchGuests()
+const { deadline, fetchSettings, patchSettings } = useAdminSettings()
+await Promise.all([fetchGuests(), fetchSettings()])
+
+const deadlineInput = ref(deadline.value ? new Date(deadline.value - new Date(deadline.value).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '')
+
+async function saveDeadline() {
+  try {
+    await patchSettings(deadlineInput.value || null)
+  } catch (e) {
+    console.error(e)
+    alert('Не удалось сохранить: некорректная дата дедлайна')
+  }
+}
+
+async function clearDeadline() {
+  deadlineInput.value = ''
+  await saveDeadline()
+}
 
 const editingId = ref<number | null>(null)
-const editForm = reactive({ fio: '', phone: '', comment: '', drinks: [] as string[] })
+const editForm = reactive({ fio: '', phone: '', comment: '', drinks: [] as string[], attending: null as boolean | null, allowCompanions: true })
 
 const creating = ref(false)
-const draft = reactive({ fio: '', phone: '', comment: '', drinks: [] as string[] })
+const draft = reactive({ fio: '', phone: '', comment: '', drinks: [] as string[], allowCompanions: true })
 
 function startEdit(guest: GuestRecord) {
   editingId.value = guest.id
@@ -21,6 +39,8 @@ function startEdit(guest: GuestRecord) {
   editForm.phone = guest.phone ?? ''
   editForm.comment = guest.comment ?? ''
   editForm.drinks = [...guest.drinks]
+  editForm.attending = guest.attending
+  editForm.allowCompanions = guest.allowCompanions
 }
 
 function cancelEdit() {
@@ -33,7 +53,9 @@ async function saveEdit(id: number) {
       fio: formatFio(editForm.fio),
       phone: editForm.phone,
       comment: editForm.comment,
-      drinks: editForm.drinks
+      drinks: editForm.drinks,
+      attending: editForm.attending,
+      allowCompanions: editForm.allowCompanions
     })
     editingId.value = null
   } catch (e) {
@@ -48,6 +70,7 @@ function startCreate() {
   draft.phone = ''
   draft.comment = ''
   draft.drinks = []
+  draft.allowCompanions = true
 }
 
 function cancelCreate() {
@@ -60,7 +83,8 @@ async function confirmCreate() {
       fio: formatFio(draft.fio) || undefined,
       phone: draft.phone || undefined,
       comment: draft.comment || undefined,
-      drinks: draft.drinks
+      drinks: draft.drinks,
+      allowCompanions: draft.allowCompanions
     })
     creating.value = false
   } catch (e) {
@@ -74,11 +98,6 @@ async function toggleSubmitted(guest: GuestRecord, event: Event) {
     await patchGuest(guest.id, { submitted: !guest.submitted })
   } catch (e) {
     console.error(e)
-    // guest.submitted never changed on failure, but the browser already flipped the
-    // checkbox's native checked state on click regardless of the :checked binding
-    // (that's native <input type="checkbox"> behavior, independent of Vue) — and since
-    // the bound value truly didn't change, Vue won't re-render to reassert it. Reset
-    // the DOM element directly so the checkbox doesn't lie about the saved state.
     const input = event.target as HTMLInputElement
     input.checked = guest.submitted
     alert('Не удалось сохранить: не получилось обновить статус ответа')
@@ -119,6 +138,12 @@ async function onLogout() {
   await $fetch('/api/admin/logout', { method: 'POST' })
   await navigateTo('/admin/login')
 }
+
+function attendingLabel(attending: boolean | null) {
+  if (attending === true) return 'Да'
+  if (attending === false) return 'Нет'
+  return '—'
+}
 </script>
 
 <template>
@@ -126,13 +151,22 @@ async function onLogout() {
     <button @click="onLogout">Выйти</button>
     <a href="/api/admin/guests/export">Экспорт CSV</a>
 
+    <div>
+      <label>
+        Дедлайн ответа:
+        <input v-model="deadlineInput" type="datetime-local">
+      </label>
+      <button @click="saveDeadline">Сохранить дедлайн</button>
+      <button v-if="deadline" @click="clearDeadline">Снять дедлайн</button>
+    </div>
+
     <p v-if="loading">Загрузка...</p>
 
     <table v-else>
       <thead>
         <tr>
           <th>ФИО</th><th>Телефон</th><th>Напитки</th><th>Сопровождающие</th><th>Комментарий</th>
-          <th>Ответил</th><th>Открыл конверт</th><th>Ссылка</th><th></th>
+          <th>Придёт</th><th>Тип</th><th>Ответил</th><th>Открыл конверт</th><th>Ссылка</th><th></th>
         </tr>
       </thead>
       <tbody>
@@ -148,6 +182,19 @@ async function onLogout() {
             </td>
             <td>{{ guest.companions.map((c) => c.fio).join(', ') }}</td>
             <td><textarea v-model="editForm.comment" /></td>
+            <td>
+              <select v-model="editForm.attending">
+                <option :value="null">—</option>
+                <option :value="true">Да</option>
+                <option :value="false">Нет</option>
+              </select>
+            </td>
+            <td>
+              <select v-model="editForm.allowCompanions">
+                <option :value="true">Со спутниками</option>
+                <option :value="false">Фиксированное</option>
+              </select>
+            </td>
             <td colspan="3"></td>
             <td>
               <button @click="saveEdit(guest.id)">Сохранить</button>
@@ -161,6 +208,8 @@ async function onLogout() {
             <td>{{ guest.drinks.join(', ') }}</td>
             <td>{{ guest.companions.map((c) => c.fio).join(', ') }}</td>
             <td>{{ guest.comment }}</td>
+            <td>{{ attendingLabel(guest.attending) }}</td>
+            <td>{{ guest.allowCompanions ? 'Со спутниками' : 'Фиксированное' }}</td>
             <td><input type="checkbox" :checked="guest.submitted" @change="toggleSubmitted(guest, $event)"></td>
             <td><input type="checkbox" :checked="guest.envelopeOpened" @change="toggleEnvelopeOpened(guest, $event)"></td>
             <td><button :disabled="!guest.inviteCode" @click="copyLink(guest)">Скопировать ссылку</button></td>
@@ -182,6 +231,13 @@ async function onLogout() {
           </td>
           <td></td>
           <td><textarea v-model="draft.comment" placeholder="Комментарий" /></td>
+          <td></td>
+          <td>
+            <select v-model="draft.allowCompanions">
+              <option :value="true">Со спутниками</option>
+              <option :value="false">Фиксированное</option>
+            </select>
+          </td>
           <td colspan="3"></td>
           <td>
             <button @click="confirmCreate">✓</button>
@@ -190,7 +246,7 @@ async function onLogout() {
         </tr>
 
         <tr v-else>
-          <td colspan="9">
+          <td colspan="11">
             <button :disabled="creating" @click="startCreate">+ Создать приглашение</button>
           </td>
         </tr>
