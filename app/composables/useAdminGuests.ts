@@ -9,6 +9,8 @@ export interface GuestRecord {
   inviteCode: string | null
   submitted: boolean
   envelopeOpened: boolean
+  attending: boolean | null
+  allowCompanions: boolean
   companions: { id: number, fio: string, drinks: string[] }[]
 }
 
@@ -17,6 +19,8 @@ export interface GuestCreateInput {
   phone?: string
   comment?: string
   drinks?: string[]
+  attending?: boolean | null
+  allowCompanions?: boolean
 }
 
 export function useAdminGuests() {
