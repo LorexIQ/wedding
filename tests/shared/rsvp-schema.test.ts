@@ -8,6 +8,7 @@ describe('rsvpSchema', () => {
       fio: 'Иванов Иван',
       phone: '+79990000000',
       comment: '',
+      attending: true,
       drinks: ['red_dry'],
       companions: [{ fio: 'Петров Пётр', drinks: ['sparkling'] }],
       website: ''
@@ -16,23 +17,23 @@ describe('rsvpSchema', () => {
   })
 
   it('rejects empty fio', () => {
-    const result = rsvpSchema.safeParse({ fio: '', drinks: [], companions: [], website: '' })
+    const result = rsvpSchema.safeParse({ fio: '', attending: true, drinks: [], companions: [], website: '' })
     expect(result.success).toBe(false)
   })
 
   it('rejects more than 3 companions', () => {
     const companions = Array.from({ length: 4 }, (_, i) => ({ fio: `Гость ${i}`, drinks: [] }))
-    const result = rsvpSchema.safeParse({ fio: 'Тест', drinks: [], companions, website: '' })
+    const result = rsvpSchema.safeParse({ fio: 'Тест', attending: true, drinks: [], companions, website: '' })
     expect(result.success).toBe(false)
   })
 
   it('rejects unknown drink option', () => {
-    const result = rsvpSchema.safeParse({ fio: 'Тест', drinks: ['vodka-cocktail'], companions: [], website: '' })
+    const result = rsvpSchema.safeParse({ fio: 'Тест', attending: true, drinks: ['vodka-cocktail'], companions: [], website: '' })
     expect(result.success).toBe(false)
   })
 
   it('allows website field to be non-empty (honeypot handled downstream, not by schema)', () => {
-    const result = rsvpSchema.safeParse({ fio: 'Бот', drinks: [], companions: [], website: 'spam' })
+    const result = rsvpSchema.safeParse({ fio: 'Бот', attending: true, drinks: [], companions: [], website: 'spam' })
     expect(result.success).toBe(true)
   })
 })
@@ -57,6 +58,7 @@ describe('взаимоисключение «Не пью»', () => {
   it('rsvpSchema отклоняет «не пью» вместе с алкоголем у гостя', () => {
     const parsed = rsvpSchema.safeParse({
       fio: 'Иванов Иван',
+      attending: true,
       drinks: ['none', 'red_dry'],
       companions: [],
       website: ''
@@ -67,6 +69,7 @@ describe('взаимоисключение «Не пью»', () => {
   it('rsvpSchema отклоняет такой набор и у спутника', () => {
     const parsed = rsvpSchema.safeParse({
       fio: 'Иванов Иван',
+      attending: true,
       drinks: [],
       companions: [{ fio: 'Петров Пётр', drinks: ['none', 'vodka'] }],
       website: ''
@@ -77,6 +80,20 @@ describe('взаимоисключение «Не пью»', () => {
   it('guestPatchSchema отклоняет такой набор при правке из админки', () => {
     const parsed = guestPatchSchema.safeParse({ drinks: ['none', 'brandy'] })
     expect(parsed.success).toBe(false)
+  })
+})
+
+describe('rsvpSchema — новое поле attending', () => {
+  it('requires attending', () => {
+    const result = rsvpSchema.safeParse({ fio: 'Тест', drinks: [], companions: [], website: '' })
+    expect(result.success).toBe(false)
+  })
+
+  it('accepts attending: false with empty drinks/companions', () => {
+    const result = rsvpSchema.safeParse({
+      fio: 'Тест', attending: false, drinks: [], companions: [], website: ''
+    })
+    expect(result.success).toBe(true)
   })
 })
 
@@ -120,6 +137,23 @@ describe('guestPatchSchema — новые поля fio/submitted/envelopeOpened'
 
   it('принимает пустую строку fio, позволяя очистить ФИО', () => {
     const result = guestPatchSchema.safeParse({ fio: '' })
+    expect(result.success).toBe(true)
+  })
+})
+
+describe('guestPatchSchema / guestCreateSchema — attending и allowCompanions', () => {
+  it('guestPatchSchema принимает attending: null (сброс ответа)', () => {
+    const result = guestPatchSchema.safeParse({ attending: null })
+    expect(result.success).toBe(true)
+  })
+
+  it('guestPatchSchema принимает allowCompanions', () => {
+    const result = guestPatchSchema.safeParse({ allowCompanions: false })
+    expect(result.success).toBe(true)
+  })
+
+  it('guestCreateSchema принимает allowCompanions при создании', () => {
+    const result = guestCreateSchema.safeParse({ allowCompanions: false })
     expect(result.success).toBe(true)
   })
 })

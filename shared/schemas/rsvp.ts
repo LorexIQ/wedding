@@ -16,6 +16,7 @@ export const rsvpSchema = z.object({
   fio: z.string().trim().min(1, 'Укажите ФИО').max(200),
   phone: z.string().trim().max(30).optional().or(z.literal('')),
   comment: z.string().trim().max(1000).optional().or(z.literal('')),
+  attending: z.boolean({ required_error: 'Укажите, придёте ли вы' }),
   drinks: drinksField.default([]),
   companions: z.array(companionSchema).max(3, 'Не больше 3 сопровождающих').default([]),
   website: z.string().optional().default('')
@@ -29,7 +30,9 @@ export const guestPatchSchema = z.object({
   comment: z.string().trim().max(1000).optional(),
   drinks: drinksField.optional(),
   submitted: z.boolean().optional(),
-  envelopeOpened: z.boolean().optional()
+  envelopeOpened: z.boolean().optional(),
+  attending: z.boolean().nullable().optional(),
+  allowCompanions: z.boolean().optional()
 }).strict()
 
 export type GuestPatchInput = z.infer<typeof guestPatchSchema>
@@ -38,7 +41,9 @@ export const guestCreateSchema = z.object({
   fio: z.string().trim().max(200).optional(),
   phone: z.string().trim().max(30).optional(),
   comment: z.string().trim().max(1000).optional(),
-  drinks: drinksField.optional()
+  drinks: drinksField.optional(),
+  attending: z.boolean().nullable().optional(),
+  allowCompanions: z.boolean().optional()
 }).strict()
 
 export type GuestCreateInput = z.infer<typeof guestCreateSchema>
