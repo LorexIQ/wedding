@@ -46,7 +46,7 @@ onUnmounted(() => {
 const deadlinePassed = computed(() => deadlineAt !== null && now.value >= deadlineAt)
 const deadlineLeft = computed<Remaining | null>(() => deadlineAt === null ? null : splitRemaining(deadlineAt - now.value))
 const deadlineLabel = computed(() => deadlineAt === null ? null : new Intl.DateTimeFormat('ru', {
-  day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
+  day: 'numeric', month: 'long'
 }).format(deadlineAt))
 
 const lockedNoAnswer = computed(() => deadlinePassed.value && !submitted.success)
@@ -83,11 +83,14 @@ async function onSubmit() {
         <h2>{{ form.attending === false ? 'Жаль, что не будете с нами' : 'Спасибо, ждём вас' }}</h2>
         <p class="form__lede">
           {{ form.attending === false
-            ? 'Спасибо, что сообщили — если планы изменятся, позвоните нам, номер внизу страницы.'
-            : 'Если что-то изменится — позвоните нам, номер внизу страницы.' }}
+            ? 'Спасибо, что сообщили — если планы изменятся, позвоните нам или измените ответ.'
+            : 'Если что-то изменится — позвоните нам или измените ответ.' }}
         </p>
         <button v-if="!deadlinePassed" class="submit" type="button" @click="editing = true">
           Изменить ответ
+        </button>
+        <button v-else class="submit" type="button" disabled>
+          Редактирование закрыто
         </button>
       </div>
 
@@ -227,11 +230,11 @@ async function onSubmit() {
         </template>
 
         <div class="field">
-          <label for="comment">Что-то важное для нас</label>
+          <label for="comment">{{ form.attending === false ? 'Хотите что-то передать?' : 'Что-то важное для нас' }}</label>
           <textarea
             id="comment"
             v-model="form.comment"
-            placeholder="Аллергия, детское меню, приеду позже — что угодно"
+            :placeholder="form.attending === false ? 'Пожелания молодожёнам — что угодно' : 'Аллергия, приеду позже — что угодно'"
           />
         </div>
 
