@@ -15,7 +15,8 @@ const deadlineInput = ref(deadline.value ? new Date(deadline.value - new Date(de
 
 async function saveDeadline() {
   try {
-    await patchSettings(deadlineInput.value || null)
+    const iso = deadlineInput.value ? new Date(deadlineInput.value).toISOString() : null
+    await patchSettings(iso)
   } catch (e) {
     console.error(e)
     alert('Не удалось сохранить: некорректная дата дедлайна')

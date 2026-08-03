@@ -20,7 +20,12 @@ interface InviteGuest {
 const inviteGuest = useState<InviteGuest | undefined>('inviteGuest')
 
 const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, submit } =
-  useRsvpForm(inviteGuest.value ?? undefined, inviteGuest.value?.submitted ?? false)
+  useRsvpForm(
+    inviteGuest.value
+      ? { ...inviteGuest.value, companions: inviteGuest.value.allowCompanions ? inviteGuest.value.companions : [] }
+      : undefined,
+    inviteGuest.value?.submitted ?? false
+  )
 
 const editing = ref(false)
 const allowCompanions = computed(() => inviteGuest.value?.allowCompanions ?? true)
@@ -75,11 +80,11 @@ async function onSubmit() {
 
       <div v-else-if="submitted.success && !editing" class="thanks">
         <p class="eyebrow">Ответ получен</p>
-        <h2>{{ form.attending ? 'Спасибо, ждём вас' : 'Жаль, что не будете с нами' }}</h2>
+        <h2>{{ form.attending === false ? 'Жаль, что не будете с нами' : 'Спасибо, ждём вас' }}</h2>
         <p class="form__lede">
-          {{ form.attending
-            ? 'Если что-то изменится — позвоните нам, номер внизу страницы.'
-            : 'Спасибо, что сообщили — если планы изменятся, позвоните нам, номер внизу страницы.' }}
+          {{ form.attending === false
+            ? 'Спасибо, что сообщили — если планы изменятся, позвоните нам, номер внизу страницы.'
+            : 'Если что-то изменится — позвоните нам, номер внизу страницы.' }}
         </p>
         <button v-if="!deadlinePassed" class="submit" type="button" @click="editing = true">
           Изменить ответ
