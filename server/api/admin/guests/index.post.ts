@@ -26,6 +26,8 @@ export async function createGuestInvite(input: GuestCreateInput, dbInstance: typ
     phone: input.phone || null,
     comment: input.comment || null,
     drinks: input.drinks ?? [],
+    attending: input.attending ?? null,
+    allowCompanions: input.allowCompanions ?? true,
     inviteCode,
     submitted: false,
     envelopeOpened: false,

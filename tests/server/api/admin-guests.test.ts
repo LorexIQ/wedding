@@ -140,6 +140,18 @@ describe('createGuestInvite (POST /api/admin/guests)', () => {
 
     expect(Object.keys(created).sort()).toEqual(Object.keys(listed[0]!).sort())
   })
+
+  it('создаёт фиксированное приглашение (allowCompanions: false)', async () => {
+    const testDb = createTestDb()
+    const created = await createGuestInvite({ allowCompanions: false }, testDb)
+    expect(created.allowCompanions).toBe(false)
+  })
+
+  it('по умолчанию создаёт приглашение с allowCompanions: true', async () => {
+    const testDb = createTestDb()
+    const created = await createGuestInvite({}, testDb)
+    expect(created.allowCompanions).toBe(true)
+  })
 })
 
 describe('updateGuest — переключение флагов submitted/envelopeOpened', () => {
@@ -154,6 +166,33 @@ describe('updateGuest — переключение флагов submitted/envelo
     const reverted = await updateGuest(id, { submitted: false }, testDb)
     expect(reverted?.submitted).toBe(false)
     expect(reverted?.envelopeOpened).toBe(true)
+  })
+})
+
+describe('updateGuest — attending и allowCompanions', () => {
+  it('обновляет attending через updateGuest', async () => {
+    const testDb = createTestDb()
+    const id = seedGuest(testDb)
+
+    const updated = await updateGuest(id, { attending: true }, testDb)
+    expect(updated?.attending).toBe(true)
+  })
+
+  it('сбрасывает attending обратно в null', async () => {
+    const testDb = createTestDb()
+    const id = seedGuest(testDb)
+
+    await updateGuest(id, { attending: false }, testDb)
+    const reverted = await updateGuest(id, { attending: null }, testDb)
+    expect(reverted?.attending).toBeNull()
+  })
+
+  it('переключает allowCompanions', async () => {
+    const testDb = createTestDb()
+    const id = seedGuest(testDb)
+
+    const updated = await updateGuest(id, { allowCompanions: false }, testDb)
+    expect(updated?.allowCompanions).toBe(false)
   })
 })
 
