@@ -95,6 +95,14 @@ describe('rsvpSchema — новое поле attending', () => {
     })
     expect(result.success).toBe(true)
   })
+
+  it('rejects attending: null with the Russian message, not Zod\'s English default', () => {
+    const result = rsvpSchema.safeParse({ fio: 'Тест', attending: null, drinks: [], companions: [], website: '' })
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toBe('Укажите, придёте ли вы')
+    }
+  })
 })
 
 describe('guestCreateSchema (POST /api/admin/guests — создание инвайта)', () => {

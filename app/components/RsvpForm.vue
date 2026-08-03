@@ -1,13 +1,54 @@
 <script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRsvpForm } from '../composables/useRsvpForm'
-import { wedding } from '../content/wedding'
 import { DRINK_OPTIONS, DRINK_LABELS } from '#shared/constants/drinks'
 import { formatFio } from '../utils/formatFio'
+import { splitRemaining, type Remaining } from '../utils/countdown'
 
-const inviteGuest = useState<{ fio: string | null, phone: string | null, comment: string | null, drinks: string[], submitted: boolean } | undefined>('inviteGuest')
+interface InviteGuest {
+  fio: string | null
+  phone: string | null
+  comment: string | null
+  drinks: string[]
+  submitted: boolean
+  attending: boolean | null
+  allowCompanions: boolean
+  companions: { id: number, fio: string, drinks: string[] }[]
+  rsvpDeadlineAt: number | null
+}
+
+const inviteGuest = useState<InviteGuest | undefined>('inviteGuest')
 
 const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, submit } =
-  useRsvpForm(inviteGuest.value, inviteGuest.value?.submitted ?? false)
+  useRsvpForm(inviteGuest.value ?? undefined, inviteGuest.value?.submitted ?? false)
+
+const editing = ref(false)
+const allowCompanions = computed(() => inviteGuest.value?.allowCompanions ?? true)
+const deadlineAt = inviteGuest.value?.rsvpDeadlineAt ?? null
+
+const now = ref(Date.now())
+let timer: ReturnType<typeof setInterval> | undefined
+
+onMounted(() => {
+  if (!deadlineAt) return
+  timer = setInterval(() => { now.value = Date.now() }, 1000)
+})
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
+
+const deadlinePassed = computed(() => deadlineAt !== null && now.value >= deadlineAt)
+const deadlineLeft = computed<Remaining | null>(() => deadlineAt === null ? null : splitRemaining(deadlineAt - now.value))
+const deadlineLabel = computed(() => deadlineAt === null ? null : new Intl.DateTimeFormat('ru', {
+  day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
+}).format(deadlineAt))
+
+const lockedNoAnswer = computed(() => deadlinePassed.value && !submitted.success)
+
+function pad(value: number) {
+  return String(value).padStart(2, '0')
+}
 
 function onFioBlur() {
   form.fio = formatFio(form.fio)
@@ -16,19 +57,49 @@ function onFioBlur() {
 function onCompanionFioBlur(index: number) {
   form.companions[index]!.fio = formatFio(form.companions[index]!.fio)
 }
+
+async function onSubmit() {
+  const ok = await submit()
+  if (ok) editing.value = false
+}
 </script>
 
 <template>
   <section class="band band--deep">
     <div class="inner">
-      <form v-if="!submitted.success" class="form" @submit.prevent="submit">
+      <div v-if="lockedNoAnswer" class="thanks">
+        <p class="eyebrow">Приём ответов завершён</p>
+        <h2>Редактирование закрыто</h2>
+        <p class="form__lede">Если нужно что-то сообщить — позвоните нам, номер внизу страницы.</p>
+      </div>
+
+      <div v-else-if="submitted.success && !editing" class="thanks">
+        <p class="eyebrow">Ответ получен</p>
+        <h2>{{ form.attending ? 'Спасибо, ждём вас' : 'Жаль, что не будете с нами' }}</h2>
+        <p class="form__lede">
+          {{ form.attending
+            ? 'Если что-то изменится — позвоните нам, номер внизу страницы.'
+            : 'Спасибо, что сообщили — если планы изменятся, позвоните нам, номер внизу страницы.' }}
+        </p>
+        <button v-if="!deadlinePassed" class="submit" type="button" @click="editing = true">
+          Изменить ответ
+        </button>
+      </div>
+
+      <form v-else class="form" @submit.prevent="onSubmit">
         <div class="form__head">
           <p class="eyebrow">Подтверждение</p>
           <h2>Будете ли вы с нами?</h2>
-          <p class="form__deadline">Ждём ответа до {{ wedding.rsvpDeadline }}</p>
+          <p v-if="deadlineLabel" class="form__deadline">Ждём ответа до {{ deadlineLabel }}</p>
+          <div v-if="deadlineLeft" class="form__countdown" role="timer">
+            <span><b>{{ deadlineLeft.days }}</b>д</span>
+            <span><b>{{ pad(deadlineLeft.hours) }}</b>ч</span>
+            <span><b>{{ pad(deadlineLeft.minutes) }}</b>м</span>
+            <span><b>{{ pad(deadlineLeft.seconds) }}</b>с</span>
+          </div>
           <p class="form__lede">
-            Заполните форму, чтобы мы знали, кого ждать. Если придёте не один — добавьте спутников,
-            одной анкеты на всех достаточно.
+            Заполните форму, чтобы мы знали, кого ждать.<template v-if="allowCompanions"> Если придёте не один — добавьте спутников,
+            одной анкеты на всех достаточно.</template>
           </p>
         </div>
 
@@ -43,6 +114,21 @@ function onCompanionFioBlur(index: number) {
         >
 
         <p v-if="errors.message" class="summary">{{ errors.message }}</p>
+
+        <div class="field">
+          <label id="attendingLabel">Придёте?</label>
+          <div class="attending" role="radiogroup" aria-labelledby="attendingLabel">
+            <label class="attending__opt">
+              <input type="radio" name="attending" :checked="form.attending === true" @change="form.attending = true">
+              Приду
+            </label>
+            <label class="attending__opt">
+              <input type="radio" name="attending" :checked="form.attending === false" @change="form.attending = false">
+              Не приду
+            </label>
+          </div>
+          <p v-if="errors.fields.attending" class="error">{{ errors.fields.attending }}</p>
+        </div>
 
         <div class="field">
           <label for="fio">Имя и фамилия</label>
@@ -71,65 +157,69 @@ function onCompanionFioBlur(index: number) {
           <p v-if="errors.fields.phone" class="error">{{ errors.fields.phone }}</p>
         </div>
 
-        <div class="field">
-          <label id="drinksLabel">Что предпочитаете из напитков</label>
-          <div class="drinks" role="group" aria-labelledby="drinksLabel">
-            <label v-for="opt in DRINK_OPTIONS" :key="opt" class="drink">
-              <input
-                type="checkbox"
-                :checked="form.drinks.includes(opt)"
-                @change="toggleDrink(form, opt)"
-              >
-              {{ DRINK_LABELS[opt] }}
-            </label>
-          </div>
-          <p v-if="errors.fields.drinks" class="error">{{ errors.fields.drinks }}</p>
-        </div>
-
-        <div v-for="(companion, index) in form.companions" :key="index" class="companion">
-          <div class="companion__head">
-            <p class="companion__title">Спутник {{ index + 1 }}</p>
-            <button class="companion__drop" type="button" @click="removeCompanion(index)">
-              убрать
-            </button>
-          </div>
-
+        <template v-if="form.attending">
           <div class="field">
-            <label :for="`companion-${index}`">Имя и фамилия</label>
-            <input
-              :id="`companion-${index}`"
-              v-model="companion.fio"
-              type="text"
-              placeholder="Мария Петрова"
-              :aria-invalid="Boolean(errors.fields[`companions.${index}.fio`])"
-              @blur="onCompanionFioBlur(index)"
-            >
-            <p v-if="errors.fields[`companions.${index}.fio`]" class="error">
-              {{ errors.fields[`companions.${index}.fio`] }}
-            </p>
-          </div>
-
-          <div class="field">
-            <label :id="`companion-${index}-drinks`">Напитки</label>
-            <div class="drinks" role="group" :aria-labelledby="`companion-${index}-drinks`">
+            <label id="drinksLabel">Что предпочитаете из напитков</label>
+            <div class="drinks" role="group" aria-labelledby="drinksLabel">
               <label v-for="opt in DRINK_OPTIONS" :key="opt" class="drink">
                 <input
                   type="checkbox"
-                  :checked="companion.drinks.includes(opt)"
-                  @change="toggleDrink(companion, opt)"
+                  :checked="form.drinks.includes(opt)"
+                  @change="toggleDrink(form, opt)"
                 >
                 {{ DRINK_LABELS[opt] }}
               </label>
             </div>
-            <p v-if="errors.fields[`companions.${index}.drinks`]" class="error">
-              {{ errors.fields[`companions.${index}.drinks`] }}
-            </p>
+            <p v-if="errors.fields.drinks" class="error">{{ errors.fields.drinks }}</p>
           </div>
-        </div>
 
-        <button v-if="form.companions.length < 3" class="addmore" type="button" @click="addCompanion">
-          {{ form.companions.length ? '+ Добавить ещё спутника' : '+ Я буду не один — добавить спутника' }}
-        </button>
+          <template v-if="allowCompanions">
+            <div v-for="(companion, index) in form.companions" :key="index" class="companion">
+              <div class="companion__head">
+                <p class="companion__title">Спутник {{ index + 1 }}</p>
+                <button class="companion__drop" type="button" @click="removeCompanion(index)">
+                  убрать
+                </button>
+              </div>
+
+              <div class="field">
+                <label :for="`companion-${index}`">Имя и фамилия</label>
+                <input
+                  :id="`companion-${index}`"
+                  v-model="companion.fio"
+                  type="text"
+                  placeholder="Мария Петрова"
+                  :aria-invalid="Boolean(errors.fields[`companions.${index}.fio`])"
+                  @blur="onCompanionFioBlur(index)"
+                >
+                <p v-if="errors.fields[`companions.${index}.fio`]" class="error">
+                  {{ errors.fields[`companions.${index}.fio`] }}
+                </p>
+              </div>
+
+              <div class="field">
+                <label :id="`companion-${index}-drinks`">Напитки</label>
+                <div class="drinks" role="group" :aria-labelledby="`companion-${index}-drinks`">
+                  <label v-for="opt in DRINK_OPTIONS" :key="opt" class="drink">
+                    <input
+                      type="checkbox"
+                      :checked="companion.drinks.includes(opt)"
+                      @change="toggleDrink(companion, opt)"
+                    >
+                    {{ DRINK_LABELS[opt] }}
+                  </label>
+                </div>
+                <p v-if="errors.fields[`companions.${index}.drinks`]" class="error">
+                  {{ errors.fields[`companions.${index}.drinks`] }}
+                </p>
+              </div>
+            </div>
+
+            <button v-if="form.companions.length < 3" class="addmore" type="button" @click="addCompanion">
+              {{ form.companions.length ? '+ Добавить ещё спутника' : '+ Я буду не один — добавить спутника' }}
+            </button>
+          </template>
+        </template>
 
         <div class="field">
           <label for="comment">Что-то важное для нас</label>
@@ -144,12 +234,6 @@ function onCompanionFioBlur(index: number) {
           {{ submitted.pending ? 'Отправляем…' : 'Отправить' }}
         </button>
       </form>
-
-      <div v-else class="thanks">
-        <p class="eyebrow">Ответ получен</p>
-        <h2>Спасибо, ждём вас</h2>
-        <p class="form__lede">Если что-то изменится — позвоните нам, номер внизу страницы.</p>
-      </div>
     </div>
   </section>
 </template>
@@ -176,6 +260,46 @@ function onCompanionFioBlur(index: number) {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--wheat);
+}
+
+.form__countdown {
+  display: flex;
+  gap: 14px;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.form__countdown b {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.attending {
+  display: flex;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+.attending__opt {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 14px;
+  font-family: var(--sans);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.attending__opt + .attending__opt {
+  border-left: 1px solid var(--rule);
+}
+
+.attending__opt:has(input:checked) {
+  background: #E3E8D8;
 }
 
 .form__lede {

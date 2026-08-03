@@ -16,7 +16,10 @@ export const rsvpSchema = z.object({
   fio: z.string().trim().min(1, 'Укажите ФИО').max(200),
   phone: z.string().trim().max(30).optional().or(z.literal('')),
   comment: z.string().trim().max(1000).optional().or(z.literal('')),
-  attending: z.boolean({ required_error: 'Укажите, придёте ли вы' }),
+  attending: z.boolean({
+    required_error: 'Укажите, придёте ли вы',
+    invalid_type_error: 'Укажите, придёте ли вы'
+  }),
   drinks: drinksField.default([]),
   companions: z.array(companionSchema).max(3, 'Не больше 3 сопровождающих').default([]),
   website: z.string().optional().default('')
