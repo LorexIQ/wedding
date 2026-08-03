@@ -5,6 +5,8 @@ import patchGuestHandler from '../../../server/api/admin/guests/[id].patch'
 import deleteGuestHandler from '../../../server/api/admin/guests/[id].delete'
 import exportGuestsHandler from '../../../server/api/admin/guests/export.get'
 import createGuestHandler from '../../../server/api/admin/guests/index.post'
+import getSettingsHandler from '../../../server/api/admin/settings.get'
+import patchSettingsHandler from '../../../server/api/admin/settings.patch'
 
 // Every admin route's default export calls `requireAdminSession(event)` as
 // its very first line (server/utils/session.ts). Nothing in the rest of the
@@ -46,5 +48,15 @@ describe('admin route auth guards', () => {
   it('POST /api/admin/guests rejects an unauthenticated request with 401', async () => {
     const event = createMockEvent({ method: 'POST', body: {} })
     await expect(createGuestHandler(event)).rejects.toMatchObject({ statusCode: 401 })
+  })
+
+  it('GET /api/admin/settings rejects an unauthenticated request with 401', async () => {
+    const event = createMockEvent({ method: 'GET' })
+    await expect(getSettingsHandler(event)).rejects.toMatchObject({ statusCode: 401 })
+  })
+
+  it('PATCH /api/admin/settings rejects an unauthenticated request with 401', async () => {
+    const event = createMockEvent({ method: 'PATCH', body: { rsvpDeadlineAt: null } })
+    await expect(patchSettingsHandler(event)).rejects.toMatchObject({ statusCode: 401 })
   })
 })
