@@ -10,7 +10,7 @@ import * as schema from '../../server/database/schema'
 const REAL_MIGRATIONS_FOLDER = './server/database/migrations'
 
 describe('migration verification', () => {
-  it('migrations 0000 and 0001 apply successfully and create correct schema', () => {
+  it('migrations 0000, 0001 and 0002 apply successfully and create correct schema', () => {
     const sqlite = new Database(':memory:')
     sqlite.pragma('foreign_keys = ON')
 
@@ -52,6 +52,8 @@ describe('migration verification', () => {
     expect(guests[0].inviteCode).toBeNull()
     expect(guests[0].submitted).toBe(false)
     expect(guests[0].envelopeOpened).toBe(false)
+    expect(guests[0].attending).toBeNull()
+    expect(guests[0].allowCompanions).toBe(true)
     expect(guests[0].createdAt).toBeDefined()
     expect(guests[0].updatedAt).toBeDefined()
     expect(guests[0].createdAt instanceof Date).toBe(true)

@@ -16,6 +16,8 @@ export function createTestDb() {
       invite_code TEXT UNIQUE,
       submitted INTEGER NOT NULL DEFAULT 0,
       envelope_opened INTEGER NOT NULL DEFAULT 0,
+      attending INTEGER,
+      allow_companions INTEGER NOT NULL DEFAULT 1,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );
@@ -31,6 +33,11 @@ export function createTestDb() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       login TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL
+    );
+
+    CREATE TABLE settings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      rsvp_deadline_at INTEGER
     );
   `)
 

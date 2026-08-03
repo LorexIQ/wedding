@@ -15,6 +15,13 @@
       "when": 1785448979078,
       "tag": "0001_smart_dust",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785784497734,
+      "tag": "0002_high_killraven",
+      "breakpoints": true
     }
   ]
 }
