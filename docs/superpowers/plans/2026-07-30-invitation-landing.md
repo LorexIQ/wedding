@@ -14,24 +14,24 @@
 
 ## Структура файлов
 
-| Файл | Ответственность |
-|---|---|
-| `shared/constants/drinks.ts` | **изменить** — новый список из восьми напитков, `NO_DRINK`, `isDrinkSetValid`, `normalizeDrinks` |
-| `shared/schemas/rsvp.ts` | **изменить** — `.refine()` на наборах напитков в трёх схемах |
-| `app/content/wedding.ts` | **создать** — все тексты и данные торжества |
-| `app/utils/countdown.ts` | **создать** — `splitRemaining()` |
-| `app/utils/phone.ts` | **создать** — `formatPhone()`, `maskPhone()` |
-| `app/assets/css/main.css` | **создать** — токены палитры, типографика, базовые стили |
-| `app/components/TheHero.vue` | **создать** — обложка |
-| `app/components/OurStory.vue` | **создать** — история пары |
-| `app/components/TheVenue.vue` | **создать** — место, карта по клику |
-| `app/components/GuestNotes.vue` | **создать** — просьбы к гостям |
-| `app/components/TheCountdown.vue` | **создать** — обратный отсчёт |
-| `app/components/RsvpForm.vue` | **изменить** — переверстать целиком |
-| `app/components/TheFooter.vue` | **создать** — подвал, раскрытие телефона |
-| `app/composables/useRsvpForm.ts` | **изменить** — `toggleDrink()`, инлайновые ошибки полей |
-| `app/pages/index.vue` | **изменить** — сборка секций, SEO/OG |
-| `nuxt.config.ts` | **изменить** — подключить CSS |
+| Файл                              | Ответственность                                                                                  |
+| --------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `shared/constants/drinks.ts`      | **изменить** — новый список из восьми напитков, `NO_DRINK`, `isDrinkSetValid`, `normalizeDrinks` |
+| `shared/schemas/rsvp.ts`          | **изменить** — `.refine()` на наборах напитков в трёх схемах                                     |
+| `app/content/wedding.ts`          | **создать** — все тексты и данные торжества                                                      |
+| `app/utils/countdown.ts`          | **создать** — `splitRemaining()`                                                                 |
+| `app/utils/phone.ts`              | **создать** — `formatPhone()`, `maskPhone()`                                                     |
+| `app/assets/css/main.css`         | **создать** — токены палитры, типографика, базовые стили                                         |
+| `app/components/TheHero.vue`      | **создать** — обложка                                                                            |
+| `app/components/OurStory.vue`     | **создать** — история пары                                                                       |
+| `app/components/TheVenue.vue`     | **создать** — место, карта по клику                                                              |
+| `app/components/GuestNotes.vue`   | **создать** — просьбы к гостям                                                                   |
+| `app/components/TheCountdown.vue` | **создать** — обратный отсчёт                                                                    |
+| `app/components/RsvpForm.vue`     | **изменить** — переверстать целиком                                                              |
+| `app/components/TheFooter.vue`    | **создать** — подвал, раскрытие телефона                                                         |
+| `app/composables/useRsvpForm.ts`  | **изменить** — `toggleDrink()`, инлайновые ошибки полей                                          |
+| `app/pages/index.vue`             | **изменить** — сборка секций, SEO/OG                                                             |
+| `nuxt.config.ts`                  | **изменить** — подключить CSS                                                                    |
 
 ---
 
@@ -40,6 +40,7 @@
 Ключи `wine` / `beer` / `spirits` / `non_alcoholic` заменяются на восемь позиций из спеки. Они зашиты в фикстуры шести тестов — их правим здесь же, иначе набор упадёт.
 
 **Files:**
+
 - Modify: `shared/constants/drinks.ts`
 - Modify: `tests/shared/rsvp-schema.test.ts:10-11`
 - Modify: `tests/database/schema.test.ts:15,23,30`
@@ -52,31 +53,31 @@
 
 ```ts
 export const DRINK_OPTIONS = [
-  'red_dry',
-  'red_semi',
-  'white_dry',
-  'white_semi',
-  'sparkling',
-  'brandy',
-  'vodka',
-  'none'
-] as const
+  "red_dry",
+  "red_semi",
+  "white_dry",
+  "white_semi",
+  "sparkling",
+  "brandy",
+  "vodka",
+  "none",
+] as const;
 
-export type DrinkOption = typeof DRINK_OPTIONS[number]
+export type DrinkOption = (typeof DRINK_OPTIONS)[number];
 
 export const DRINK_LABELS: Record<DrinkOption, string> = {
-  red_dry: 'Красное сухое',
-  red_semi: 'Красное полусладкое',
-  white_dry: 'Белое сухое',
-  white_semi: 'Белое полусладкое',
-  sparkling: 'Шампанское',
-  brandy: 'Коньяк',
-  vodka: 'Водка',
-  none: 'Не пью'
-}
+  red_dry: "Красное сухое",
+  red_semi: "Красное полусладкое",
+  white_dry: "Белое сухое",
+  white_semi: "Белое полусладкое",
+  sparkling: "Шампанское",
+  brandy: "Коньяк",
+  vodka: "Водка",
+  none: "Не пью",
+};
 
 /** Вариант «не пью» — не сочетается ни с чем остальным. */
-export const NO_DRINK: DrinkOption = 'none'
+export const NO_DRINK: DrinkOption = "none";
 ```
 
 - [ ] **Step 2: Запустить тесты и увидеть падение**
@@ -100,11 +101,13 @@ Expected: FAIL — тесты с `drinks: ['wine']` и `['beer']` не прох�
 ```ts
       drinks: ['red_dry'],
 ```
+
 ```ts
-      drinks: ['sparkling']
+drinks: ["sparkling"];
 ```
+
 ```ts
-    expect(savedGuest?.drinks).toEqual(['red_dry'])
+expect(savedGuest?.drinks).toEqual(["red_dry"]);
 ```
 
 В `tests/server/csv.test.ts` строки 16–17 и 25:
@@ -113,8 +116,11 @@ Expected: FAIL — тесты с `drinks: ['wine']` и `['beer']` не прох�
       drinks: ['red_dry', 'sparkling'],
       companions: [{ fio: 'Петров Пётр', drinks: ['sparkling'] }]
 ```
+
 ```ts
-    expect(lines[1]).toBe('1,Иванов Иван,+79990000000,,red_dry; sparkling,Петров Пётр (sparkling)')
+expect(lines[1]).toBe(
+  "1,Иванов Иван,+79990000000,,red_dry; sparkling,Петров Пётр (sparkling)",
+);
 ```
 
 В `tests/server/api/rsvp.test.ts` строки 13–14:
@@ -129,12 +135,18 @@ Expected: FAIL — тесты с `drinks: ['wine']` и `['beer']` не прох�
 ```ts
     fio: 'Иванов Иван', phone: null, comment: null, drinks: ['red_dry'], createdAt: now, updatedAt: now
 ```
+
 ```ts
-  testDb.insert(companions).values({ guestId: guest.id, fio: 'Петров Пётр', drinks: ['sparkling'] }).run()
+testDb
+  .insert(companions)
+  .values({ guestId: guest.id, fio: "Петров Пётр", drinks: ["sparkling"] })
+  .run();
 ```
+
 ```ts
-    const parsed = guestPatchSchema.safeParse({ drinks: 'red_dry' })
+const parsed = guestPatchSchema.safeParse({ drinks: "red_dry" });
 ```
+
 ```ts
       body: { drinks: 'red_dry' },
 ```
@@ -164,6 +176,7 @@ git commit -m "feat(rsvp): восемь напитков вместо четыр
 Правило нужно на сервере, а не только в интерфейсе: запрос может прийти мимо формы, а админ — собрать невозможный набор через правку гостя.
 
 **Files:**
+
 - Modify: `shared/constants/drinks.ts`
 - Modify: `shared/schemas/rsvp.ts`
 - Test: `tests/shared/rsvp-schema.test.ts`
@@ -173,50 +186,50 @@ git commit -m "feat(rsvp): восемь напитков вместо четыр
 Дописать в `tests/shared/rsvp-schema.test.ts`:
 
 ```ts
-import { isDrinkSetValid } from '#shared/constants/drinks'
+import { isDrinkSetValid } from "#shared/constants/drinks";
 
-describe('взаимоисключение «Не пью»', () => {
-  it('isDrinkSetValid пропускает только алкоголь', () => {
-    expect(isDrinkSetValid(['red_dry', 'vodka'])).toBe(true)
-  })
+describe("взаимоисключение «Не пью»", () => {
+  it("isDrinkSetValid пропускает только алкоголь", () => {
+    expect(isDrinkSetValid(["red_dry", "vodka"])).toBe(true);
+  });
 
-  it('isDrinkSetValid пропускает одинокое «не пью»', () => {
-    expect(isDrinkSetValid(['none'])).toBe(true)
-  })
+  it("isDrinkSetValid пропускает одинокое «не пью»", () => {
+    expect(isDrinkSetValid(["none"])).toBe(true);
+  });
 
-  it('isDrinkSetValid пропускает пустой набор', () => {
-    expect(isDrinkSetValid([])).toBe(true)
-  })
+  it("isDrinkSetValid пропускает пустой набор", () => {
+    expect(isDrinkSetValid([])).toBe(true);
+  });
 
-  it('isDrinkSetValid отклоняет «не пью» вместе с алкоголем', () => {
-    expect(isDrinkSetValid(['none', 'vodka'])).toBe(false)
-  })
+  it("isDrinkSetValid отклоняет «не пью» вместе с алкоголем", () => {
+    expect(isDrinkSetValid(["none", "vodka"])).toBe(false);
+  });
 
-  it('rsvpSchema отклоняет «не пью» вместе с алкоголем у гостя', () => {
+  it("rsvpSchema отклоняет «не пью» вместе с алкоголем у гостя", () => {
     const parsed = rsvpSchema.safeParse({
-      fio: 'Иванов Иван',
-      drinks: ['none', 'red_dry'],
+      fio: "Иванов Иван",
+      drinks: ["none", "red_dry"],
       companions: [],
-      website: ''
-    })
-    expect(parsed.success).toBe(false)
-  })
+      website: "",
+    });
+    expect(parsed.success).toBe(false);
+  });
 
-  it('rsvpSchema отклоняет такой набор и у спутника', () => {
+  it("rsvpSchema отклоняет такой набор и у спутника", () => {
     const parsed = rsvpSchema.safeParse({
-      fio: 'Иванов Иван',
+      fio: "Иванов Иван",
       drinks: [],
-      companions: [{ fio: 'Петров Пётр', drinks: ['none', 'vodka'] }],
-      website: ''
-    })
-    expect(parsed.success).toBe(false)
-  })
+      companions: [{ fio: "Петров Пётр", drinks: ["none", "vodka"] }],
+      website: "",
+    });
+    expect(parsed.success).toBe(false);
+  });
 
-  it('guestPatchSchema отклоняет такой набор при правке из админки', () => {
-    const parsed = guestPatchSchema.safeParse({ drinks: ['none', 'brandy'] })
-    expect(parsed.success).toBe(false)
-  })
-})
+  it("guestPatchSchema отклоняет такой набор при правке из админки", () => {
+    const parsed = guestPatchSchema.safeParse({ drinks: ["none", "brandy"] });
+    expect(parsed.success).toBe(false);
+  });
+});
 ```
 
 Проверить, что `rsvpSchema` и `guestPatchSchema` есть в импортах файла — если нет, добавить в существующий `import { ... } from '#shared/schemas/rsvp'`.
@@ -236,7 +249,7 @@ Expected: FAIL — `isDrinkSetValid is not a function`.
  * либо не стоит вовсе. Проверяется и на клиенте, и на сервере.
  */
 export function isDrinkSetValid(drinks: readonly string[]): boolean {
-  return !drinks.includes(NO_DRINK) || drinks.length === 1
+  return !drinks.includes(NO_DRINK) || drinks.length === 1;
 }
 ```
 
@@ -245,39 +258,44 @@ export function isDrinkSetValid(drinks: readonly string[]): boolean {
 Заменить содержимое файла:
 
 ```ts
-import { z } from 'zod'
-import { DRINK_OPTIONS, isDrinkSetValid } from '../constants/drinks'
+import { z } from "zod";
+import { DRINK_OPTIONS, isDrinkSetValid } from "../constants/drinks";
 
-const DRINK_CLASH = '«Не пью» нельзя совместить с другими напитками'
+const DRINK_CLASH = "«Не пью» нельзя совместить с другими напитками";
 
 const drinksField = z
   .array(z.enum(DRINK_OPTIONS))
-  .refine(isDrinkSetValid, DRINK_CLASH)
+  .refine(isDrinkSetValid, DRINK_CLASH);
 
 export const companionSchema = z.object({
-  fio: z.string().trim().min(1, 'Укажите ФИО сопровождающего').max(200),
-  drinks: drinksField.default([])
-})
+  fio: z.string().trim().min(1, "Укажите ФИО сопровождающего").max(200),
+  drinks: drinksField.default([]),
+});
 
 export const rsvpSchema = z.object({
-  fio: z.string().trim().min(1, 'Укажите ФИО').max(200),
-  phone: z.string().trim().max(30).optional().or(z.literal('')),
-  comment: z.string().trim().max(1000).optional().or(z.literal('')),
+  fio: z.string().trim().min(1, "Укажите ФИО").max(200),
+  phone: z.string().trim().max(30).optional().or(z.literal("")),
+  comment: z.string().trim().max(1000).optional().or(z.literal("")),
   drinks: drinksField.default([]),
-  companions: z.array(companionSchema).max(3, 'Не больше 3 сопровождающих').default([]),
-  website: z.string().optional().default('')
-})
+  companions: z
+    .array(companionSchema)
+    .max(3, "Не больше 3 сопровождающих")
+    .default([]),
+  website: z.string().optional().default(""),
+});
 
-export type RsvpInput = z.infer<typeof rsvpSchema>
+export type RsvpInput = z.infer<typeof rsvpSchema>;
 
-export const guestPatchSchema = z.object({
-  fio: z.string().trim().min(1).max(200).optional(),
-  phone: z.string().trim().max(30).optional(),
-  comment: z.string().trim().max(1000).optional(),
-  drinks: drinksField.optional()
-}).strict()
+export const guestPatchSchema = z
+  .object({
+    fio: z.string().trim().min(1).max(200).optional(),
+    phone: z.string().trim().max(30).optional(),
+    comment: z.string().trim().max(1000).optional(),
+    drinks: drinksField.optional(),
+  })
+  .strict();
 
-export type GuestPatchInput = z.infer<typeof guestPatchSchema>
+export type GuestPatchInput = z.infer<typeof guestPatchSchema>;
 ```
 
 - [ ] **Step 5: Запустить весь набор**
@@ -299,6 +317,7 @@ git commit -m "feat(rsvp): «не пью» несовместимо с алко�
 Гость не должен получать ошибку за то, что кликнул «Не пью» поверх выбранного вина — набор чинится молча, в момент клика.
 
 **Files:**
+
 - Modify: `shared/constants/drinks.ts`
 - Modify: `app/composables/useRsvpForm.ts`
 - Test: `tests/composables/useRsvpForm.test.ts`
@@ -308,37 +327,37 @@ git commit -m "feat(rsvp): «не пью» несовместимо с алко�
 Дописать в `tests/composables/useRsvpForm.test.ts` внутрь существующего `describe`:
 
 ```ts
-  it('выбор «не пью» снимает ранее выбранный алкоголь', () => {
-    const { form, toggleDrink } = useRsvpForm()
-    toggleDrink(form, 'red_dry')
-    toggleDrink(form, 'vodka')
-    toggleDrink(form, 'none')
-    expect(form.drinks).toEqual(['none'])
-  })
+it("выбор «не пью» снимает ранее выбранный алкоголь", () => {
+  const { form, toggleDrink } = useRsvpForm();
+  toggleDrink(form, "red_dry");
+  toggleDrink(form, "vodka");
+  toggleDrink(form, "none");
+  expect(form.drinks).toEqual(["none"]);
+});
 
-  it('выбор алкоголя снимает ранее выбранное «не пью»', () => {
-    const { form, toggleDrink } = useRsvpForm()
-    toggleDrink(form, 'none')
-    toggleDrink(form, 'brandy')
-    expect(form.drinks).toEqual(['brandy'])
-  })
+it("выбор алкоголя снимает ранее выбранное «не пью»", () => {
+  const { form, toggleDrink } = useRsvpForm();
+  toggleDrink(form, "none");
+  toggleDrink(form, "brandy");
+  expect(form.drinks).toEqual(["brandy"]);
+});
 
-  it('повторный клик снимает выбор', () => {
-    const { form, toggleDrink } = useRsvpForm()
-    toggleDrink(form, 'red_dry')
-    toggleDrink(form, 'red_dry')
-    expect(form.drinks).toEqual([])
-  })
+it("повторный клик снимает выбор", () => {
+  const { form, toggleDrink } = useRsvpForm();
+  toggleDrink(form, "red_dry");
+  toggleDrink(form, "red_dry");
+  expect(form.drinks).toEqual([]);
+});
 
-  it('наборы спутников не влияют друг на друга', () => {
-    const { form, addCompanion, toggleDrink } = useRsvpForm()
-    addCompanion()
-    addCompanion()
-    toggleDrink(form.companions[0]!, 'none')
-    toggleDrink(form.companions[1]!, 'vodka')
-    expect(form.companions[0]!.drinks).toEqual(['none'])
-    expect(form.companions[1]!.drinks).toEqual(['vodka'])
-  })
+it("наборы спутников не влияют друг на друга", () => {
+  const { form, addCompanion, toggleDrink } = useRsvpForm();
+  addCompanion();
+  addCompanion();
+  toggleDrink(form.companions[0]!, "none");
+  toggleDrink(form.companions[1]!, "vodka");
+  expect(form.companions[0]!.drinks).toEqual(["none"]);
+  expect(form.companions[1]!.drinks).toEqual(["vodka"]);
+});
 ```
 
 - [ ] **Step 2: Запустить тесты и увидеть падение**
@@ -355,14 +374,17 @@ Expected: FAIL — `toggleDrink is not a function`.
  * Возвращает новый набор после клика по варианту `toggled`:
  * повторный клик снимает выбор, «не пью» вытесняет алкоголь и наоборот.
  */
-export function normalizeDrinks(current: readonly string[], toggled: string): string[] {
+export function normalizeDrinks(
+  current: readonly string[],
+  toggled: string,
+): string[] {
   if (current.includes(toggled)) {
-    return current.filter(drink => drink !== toggled)
+    return current.filter((drink) => drink !== toggled);
   }
   if (toggled === NO_DRINK) {
-    return [NO_DRINK]
+    return [NO_DRINK];
   }
-  return [...current.filter(drink => drink !== NO_DRINK), toggled]
+  return [...current.filter((drink) => drink !== NO_DRINK), toggled];
 }
 ```
 
@@ -371,21 +393,31 @@ export function normalizeDrinks(current: readonly string[], toggled: string): st
 В импортах заменить строку 3 на:
 
 ```ts
-import { DRINK_OPTIONS, normalizeDrinks } from '#shared/constants/drinks'
+import { DRINK_OPTIONS, normalizeDrinks } from "#shared/constants/drinks";
 ```
 
 Перед `function buildPayload()` добавить:
 
 ```ts
-  function toggleDrink(target: { drinks: string[] }, option: string) {
-    target.drinks = normalizeDrinks(target.drinks, option)
-  }
+function toggleDrink(target: { drinks: string[] }, option: string) {
+  target.drinks = normalizeDrinks(target.drinks, option);
+}
 ```
 
 В `return` (строка 59) добавить `toggleDrink`:
 
 ```ts
-  return { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, buildPayload, submit, DRINK_OPTIONS }
+return {
+  form,
+  errors,
+  submitted,
+  addCompanion,
+  removeCompanion,
+  toggleDrink,
+  buildPayload,
+  submit,
+  DRINK_OPTIONS,
+};
 ```
 
 - [ ] **Step 5: Запустить весь набор**
@@ -407,6 +439,7 @@ git commit -m "feat(rsvp): клик по «не пью» чинит набор �
 Дата используется таймером, заголовком страницы и OG-описанием одновременно — она обязана лежать в одном месте.
 
 **Files:**
+
 - Create: `app/content/wedding.ts`
 
 - [ ] **Step 1: Создать `app/content/wedding.ts`**
@@ -418,56 +451,56 @@ git commit -m "feat(rsvp): клик по «не пью» чинит набор �
  * трогать не нужно.
  */
 export const wedding = {
-  groom: 'Дмитрий',
-  bride: 'Александра',
-  groomFull: 'Дмитрий Мурашко',
-  brideFull: 'Александра Мадбоева',
+  groom: "Дмитрий",
+  bride: "Александра",
+  groomFull: "Дмитрий Мурашко",
+  brideFull: "Александра Мадбоева",
 
   /** Начало торжества. Часовой пояс зафиксирован: гость из другого
    *  пояса должен видеть тот же остаток, что и местный. */
-  startsAt: '2026-08-26T16:00:00+03:00',
-  dateLabel: 'среда, 26 августа 2026',
-  timeLabel: '16:00',
+  startsAt: "2026-08-26T16:00:00+03:00",
+  dateLabel: "среда, 26 августа 2026",
+  timeLabel: "16:00",
 
   venue: {
-    name: 'Inside',
-    subtitle: 'На опушке',
-    address: 'Магистральная улица, 18А',
-    settlement: 'посёлок Мичуринский',
-    mapUrl: 'https://yandex.ru/navi/org/na_opushke/163948598644',
+    name: "Inside",
+    subtitle: "На опушке",
+    address: "Магистральная улица, 18А",
+    settlement: "посёлок Мичуринский",
+    mapUrl: "https://yandex.ru/navi/org/na_opushke/163948598644",
     /** Идентификатор организации для встроенного виджета Яндекс.Карт. */
-    orgId: '163948598644'
+    orgId: "163948598644",
   },
 
   /** Телефон для вопросов гостей. Только цифры: маску и человекочитаемый
    *  вид собирает app/utils/phone.ts. */
-  contactDigits: '79066951293',
+  contactDigits: "79066951293",
 
-  rsvpDeadline: '10 августа 2026',
+  rsvpDeadline: "10 августа 2026",
 
   hero: {
-    lede: 'Мы будем рады разделить с вами радость этого дня и просим вас украсить его своим присутствием.'
+    lede: "Мы будем рады разделить с вами радость этого дня и просим вас украсить его своим присутствием.",
   },
 
   // TODO: текст от молодожёнов
   story: {
-    heading: 'Как всё начиналось',
-    text: 'Здесь будет ваш рассказ: где и когда познакомились, что было дальше, как дошли до этого дня. Обычно хватает трёх-четырёх предложений — гости читают эту часть первой и охотнее всего.',
-    photo: '/story.jpg',
-    photoAlt: 'Дмитрий и Александра'
+    heading: "Как всё начиналось",
+    text: "Всё началось с обычного сообщения на сайте знакомств. Два месяца мы узнавали друг друга через экран телефона, пока наконец не решили встретиться. Та самая встреча стала началом нашей истории: вскоре мы начали встречаться, потом стали жить вместе, а спустя год прозвучало самое важное «Да».",
+    photo: "/story.jpg",
+    photoAlt: "Дмитрий и Александра",
   },
 
   // TODO: текст от молодожёнов
   notes: [
-    'Первая просьба — например, про крики «горько»: поцелуй хочется оставить искренним, а не по расписанию.',
-    'Вторая — например, про цветы: вместо букетов приятнее получить бутылку вина в домашнюю коллекцию.',
-    'Третья — организационная: трансфер, парковка, во сколько заканчиваем.'
+    "Первая просьба — например, про крики «горько»: поцелуй хочется оставить искренним, а не по расписанию.",
+    "Вторая — например, про цветы: вместо букетов приятнее получить бутылку вина в домашнюю коллекцию.",
+    "Третья — организационная: трансфер, парковка, во сколько заканчиваем.",
   ],
 
   footer: {
-    sign: 'Будем рады видеть вас на нашем празднике.'
-  }
-} as const
+    sign: "Будем рады видеть вас на нашем празднике.",
+  },
+} as const;
 ```
 
 - [ ] **Step 2: Проверить, что TypeScript доволен**
@@ -489,6 +522,7 @@ git commit -m "feat(content): данные торжества одним фай�
 Обе вещи легко ломаются в мелочах (отрицательный остаток, ведущий ноль) и обе проверяются без браузера.
 
 **Files:**
+
 - Create: `app/utils/countdown.ts`
 - Create: `app/utils/phone.ts`
 - Test: `tests/utils/countdown.test.ts`
@@ -499,44 +533,61 @@ git commit -m "feat(content): данные торжества одним фай�
 Создать `tests/utils/countdown.test.ts`:
 
 ```ts
-import { describe, it, expect } from 'vitest'
-import { splitRemaining } from '../../app/utils/countdown'
+import { describe, it, expect } from "vitest";
+import { splitRemaining } from "../../app/utils/countdown";
 
-describe('splitRemaining', () => {
-  it('разбивает остаток на дни, часы, минуты и секунды', () => {
-    const ms = ((2 * 24 + 3) * 3600 + 4 * 60 + 5) * 1000
-    expect(splitRemaining(ms)).toEqual({ days: 2, hours: 3, minutes: 4, seconds: 5 })
-  })
+describe("splitRemaining", () => {
+  it("разбивает остаток на дни, часы, минуты и секунды", () => {
+    const ms = ((2 * 24 + 3) * 3600 + 4 * 60 + 5) * 1000;
+    expect(splitRemaining(ms)).toEqual({
+      days: 2,
+      hours: 3,
+      minutes: 4,
+      seconds: 5,
+    });
+  });
 
-  it('отдаёт нули, когда дата уже прошла', () => {
-    expect(splitRemaining(-100000)).toEqual({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-  })
+  it("отдаёт нули, когда дата уже прошла", () => {
+    expect(splitRemaining(-100000)).toEqual({
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+    });
+  });
 
-  it('отдаёт нули ровно в момент события', () => {
-    expect(splitRemaining(0)).toEqual({ days: 0, hours: 0, minutes: 0, seconds: 0 })
-  })
-})
+  it("отдаёт нули ровно в момент события", () => {
+    expect(splitRemaining(0)).toEqual({
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+    });
+  });
+});
 ```
 
 Создать `tests/utils/phone.test.ts`:
 
 ```ts
-import { describe, it, expect } from 'vitest'
-import { formatPhone, maskPhone } from '../../app/utils/phone'
+import { describe, it, expect } from "vitest";
+import { formatPhone, maskPhone } from "../../app/utils/phone";
 
-describe('телефон в подвале', () => {
-  it('форматирует номер по-человечески', () => {
-    expect(formatPhone('79066951293')).toBe('+7 906 695-12-93')
-  })
+describe("телефон в подвале", () => {
+  it("форматирует номер по-человечески", () => {
+    expect(formatPhone("79066951293")).toBe("+7 906 695-12-93");
+  });
 
-  it('прячет всё, кроме кода оператора', () => {
-    expect(maskPhone('79066951293')).toBe('+7 906 •••-••-••')
-  })
+  it("прячет всё, кроме кода оператора", () => {
+    expect(maskPhone("79066951293")).toBe("+7 906 •••-••-••");
+  });
 
-  it('собирает ссылку для звонка', () => {
-    expect(formatPhone('79066951293').replace(/[^\d+]/g, '')).toBe('+79066951293')
-  })
-})
+  it("собирает ссылку для звонка", () => {
+    expect(formatPhone("79066951293").replace(/[^\d+]/g, "")).toBe(
+      "+79066951293",
+    );
+  });
+});
 ```
 
 - [ ] **Step 2: Запустить тесты и увидеть падение**
@@ -548,21 +599,21 @@ Expected: FAIL — модули не найдены.
 
 ```ts
 export interface Remaining {
-  days: number
-  hours: number
-  minutes: number
-  seconds: number
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
 }
 
 /** Разбивает остаток в миллисекундах на части. Прошедшая дата даёт нули. */
 export function splitRemaining(ms: number): Remaining {
-  const total = Math.max(0, Math.floor(ms / 1000))
+  const total = Math.max(0, Math.floor(ms / 1000));
   return {
     days: Math.floor(total / 86400),
     hours: Math.floor(total / 3600) % 24,
     minutes: Math.floor(total / 60) % 60,
-    seconds: total % 60
-  }
+    seconds: total % 60,
+  };
 }
 ```
 
@@ -571,12 +622,12 @@ export function splitRemaining(ms: number): Remaining {
 ```ts
 /** Человекочитаемый вид: 79066951293 → +7 906 695-12-93 */
 export function formatPhone(digits: string): string {
-  return `+${digits[0]} ${digits.slice(1, 4)} ${digits.slice(4, 7)}-${digits.slice(7, 9)}-${digits.slice(9, 11)}`
+  return `+${digits[0]} ${digits.slice(1, 4)} ${digits.slice(4, 7)}-${digits.slice(7, 9)}-${digits.slice(9, 11)}`;
 }
 
 /** Маска до клика: 79066951293 → +7 906 •••-••-•• */
 export function maskPhone(digits: string): string {
-  return `+${digits[0]} ${digits.slice(1, 4)} •••-••-••`
+  return `+${digits[0]} ${digits.slice(1, 4)} •••-••-••`;
 }
 ```
 
@@ -597,6 +648,7 @@ git commit -m "feat(landing): чистые функции таймера и ма
 ### Task 6: Токены палитры и базовая типографика
 
 **Files:**
+
 - Create: `app/assets/css/main.css`
 - Modify: `nuxt.config.ts`
 
@@ -609,16 +661,16 @@ git commit -m "feat(landing): чистые функции таймера и ма
 :root {
   color-scheme: light;
 
-  --linen: #EFE9DF;
-  --linen-deep: #E5DDD0;
-  --paper: #F7F3EC;
-  --ink: #38322B;
-  --ink-soft: #6E6255;
-  --ink-faint: #A2957F;
-  --wheat: #B99A62;
-  --sage: #8B9880;
-  --rule: #D6CBB8;
-  --alarm: #9A4A34;
+  --linen: #efe9df;
+  --linen-deep: #e5ddd0;
+  --paper: #f7f3ec;
+  --ink: #38322b;
+  --ink-soft: #6e6255;
+  --ink-faint: #a2957f;
+  --wheat: #b99a62;
+  --sage: #8b9880;
+  --rule: #d6cbb8;
+  --alarm: #9a4a34;
 
   /* Веб-шрифт не подключаем: приличная кириллическая антиква весит
      сотни килобайт, а Georgia есть на всех устройствах. */
@@ -708,15 +760,15 @@ p {
 
 ```ts
 export default defineNuxtConfig({
-  compatibilityDate: '2026-07-30',
+  compatibilityDate: "2026-07-30",
   devtools: { enabled: true },
-  css: ['~/assets/css/main.css'],
+  css: ["~/assets/css/main.css"],
   runtimeConfig: {
-    dbPath: process.env.DB_PATH || './data/wedding.db',
-    sessionSecret: process.env.SESSION_SECRET || '',
-    public: {}
-  }
-})
+    dbPath: process.env.DB_PATH || "./data/wedding.db",
+    sessionSecret: process.env.SESSION_SECRET || "",
+    public: {},
+  },
+});
 ```
 
 - [ ] **Step 3: Коммит**
@@ -731,13 +783,14 @@ git commit -m "feat(landing): палитра и базовая типограф�
 ### Task 7: Обложка
 
 **Files:**
+
 - Create: `app/components/TheHero.vue`
 
 - [ ] **Step 1: Создать `app/components/TheHero.vue`**
 
 ```vue
 <script setup lang="ts">
-import { wedding } from '../content/wedding'
+import { wedding } from "../content/wedding";
 </script>
 
 <template>
@@ -751,7 +804,14 @@ import { wedding } from '../content/wedding'
     </h1>
 
     <div class="sprig" aria-hidden="true">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1">
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 22 22"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1"
+      >
         <path d="M11 20V5" />
         <path d="M11 9c-3 0-4.5-1.5-4.5-4C9.5 5 11 6.5 11 9Z" />
         <path d="M11 9c3 0 4.5-1.5 4.5-4C12.5 5 11 6.5 11 9Z" />
@@ -843,18 +903,19 @@ git commit -m "feat(landing): секция обложки"
 Фото ещё нет. Пока файла нет на диске, показываем размеченную заглушку, а не битую картинку.
 
 **Files:**
+
 - Create: `app/components/OurStory.vue`
 
 - [ ] **Step 1: Создать `app/components/OurStory.vue`**
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue'
-import { wedding } from '../content/wedding'
+import { ref } from "vue";
+import { wedding } from "../content/wedding";
 
 // Фото пары ещё не прислали. Пока файла нет, показываем размеченную
 // заглушку вместо иконки битой картинки.
-const photoBroken = ref(false)
+const photoBroken = ref(false);
 </script>
 
 <template>
@@ -868,7 +929,7 @@ const photoBroken = ref(false)
         width="480"
         height="640"
         @error="photoBroken = true"
-      >
+      />
       <div v-else class="story__stub">
         Фото
         <span>вертикальное, 3:4</span>
@@ -913,7 +974,11 @@ const photoBroken = ref(false)
   aspect-ratio: 3 / 4;
   padding: 12px;
   border: 1px dashed var(--ink-faint);
-  background: repeating-linear-gradient(45deg, transparent 0 11px, rgba(162, 149, 127, 0.09) 11px 22px);
+  background: repeating-linear-gradient(
+    45deg,
+    transparent 0 11px,
+    rgba(162, 149, 127, 0.09) 11px 22px
+  );
   font-family: var(--sans);
   font-size: 11px;
   letter-spacing: 0.1em;
@@ -954,19 +1019,20 @@ git commit -m "feat(landing): секция истории пары"
 Виджет Яндекса ставит сторонние куки всем, кто открыл страницу. Грузим его только после явного клика гостя.
 
 **Files:**
+
 - Create: `app/components/TheVenue.vue`
 
 - [ ] **Step 1: Создать `app/components/TheVenue.vue`**
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue'
-import { wedding } from '../content/wedding'
+import { ref } from "vue";
+import { wedding } from "../content/wedding";
 
 // Виджет Яндекса ставит сторонние куки каждому, кто открыл страницу.
 // Поэтому до клика гостя показываем нарисованную подложку и не
 // обращаемся к внешним доменам вовсе.
-const mapShown = ref(false)
+const mapShown = ref(false);
 </script>
 
 <template>
@@ -990,13 +1056,30 @@ const mapShown = ref(false)
         <template v-else>
           <svg class="map__art" viewBox="0 0 320 200" aria-hidden="true">
             <rect width="320" height="200" fill="#E5DDD0" />
-            <path d="M0 138h320M0 74h320M96 0v200M226 0v200" stroke="#D6CBB8" stroke-width="1.5" />
-            <path d="M0 30C70 30 70 170 150 170S300 96 320 96" stroke="#C9BCA6" stroke-width="7" fill="none" />
+            <path
+              d="M0 138h320M0 74h320M96 0v200M226 0v200"
+              stroke="#D6CBB8"
+              stroke-width="1.5"
+            />
+            <path
+              d="M0 30C70 30 70 170 150 170S300 96 320 96"
+              stroke="#C9BCA6"
+              stroke-width="7"
+              fill="none"
+            />
             <rect x="118" y="86" width="34" height="26" fill="#D9CFBC" />
             <rect x="240" y="42" width="30" height="22" fill="#D9CFBC" />
             <rect x="30" y="150" width="38" height="24" fill="#D9CFBC" />
             <circle cx="199" cy="120" r="7" fill="#B99A62" />
-            <circle cx="199" cy="120" r="15" fill="none" stroke="#B99A62" stroke-width="1.5" opacity="0.55" />
+            <circle
+              cx="199"
+              cy="120"
+              r="15"
+              fill="none"
+              stroke="#B99A62"
+              stroke-width="1.5"
+              opacity="0.55"
+            />
           </svg>
           <button class="map__cta" type="button" @click="mapShown = true">
             Показать на карте
@@ -1005,9 +1088,16 @@ const mapShown = ref(false)
       </div>
 
       <p v-if="!mapShown" class="map__hint">
-        Карта подгрузится только после нажатия — до этого страница не обращается к сторонним сервисам.
+        Карта подгрузится только после нажатия — до этого страница не обращается
+        к сторонним сервисам.
       </p>
-      <a v-else class="map__link" :href="wedding.venue.mapUrl" target="_blank" rel="noopener noreferrer">
+      <a
+        v-else
+        class="map__link"
+        :href="wedding.venue.mapUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
         Открыть в Яндекс.Картах
       </a>
     </div>
@@ -1068,7 +1158,9 @@ const mapShown = ref(false)
   letter-spacing: 0.16em;
   text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
 }
 
 .map__cta:hover {
@@ -1104,13 +1196,14 @@ git commit -m "feat(landing): место проведения, карта гру
 ### Task 10: Просьбы к гостям
 
 **Files:**
+
 - Create: `app/components/GuestNotes.vue`
 
 - [ ] **Step 1: Создать `app/components/GuestNotes.vue`**
 
 ```vue
 <script setup lang="ts">
-import { wedding } from '../content/wedding'
+import { wedding } from "../content/wedding";
 </script>
 
 <template>
@@ -1123,7 +1216,14 @@ import { wedding } from '../content/wedding'
 
       <div v-for="(note, index) in wedding.notes" :key="index" class="note">
         <span class="note__mark" aria-hidden="true">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.2">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.2"
+          >
             <path d="M7 1v12M1 7h12" />
           </svg>
         </span>
@@ -1180,37 +1280,38 @@ git commit -m "feat(landing): секция просьб к гостям"
 Таймер стартует только на клиенте: на сервере он отрендерил бы остаток на момент сборки страницы, и первый кадр разошёлся бы с реальностью.
 
 **Files:**
+
 - Create: `app/components/TheCountdown.vue`
 
 - [ ] **Step 1: Создать `app/components/TheCountdown.vue`**
 
 ```vue
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
-import { wedding } from '../content/wedding'
-import { splitRemaining, type Remaining } from '../utils/countdown'
+import { onMounted, onUnmounted, ref } from "vue";
+import { wedding } from "../content/wedding";
+import { splitRemaining, type Remaining } from "../utils/countdown";
 
-const target = new Date(wedding.startsAt).getTime()
-const left = ref<Remaining | null>(null)
+const target = new Date(wedding.startsAt).getTime();
+const left = ref<Remaining | null>(null);
 
-let timer: ReturnType<typeof setInterval> | undefined
+let timer: ReturnType<typeof setInterval> | undefined;
 
 function tick() {
-  left.value = splitRemaining(target - Date.now())
+  left.value = splitRemaining(target - Date.now());
 }
 
 // Только на клиенте: на сервере остаток застынет на момент рендера.
 onMounted(() => {
-  tick()
-  timer = setInterval(tick, 1000)
-})
+  tick();
+  timer = setInterval(tick, 1000);
+});
 
 onUnmounted(() => {
-  if (timer) clearInterval(timer)
-})
+  if (timer) clearInterval(timer);
+});
 
 function pad(value: number) {
-  return String(value).padStart(2, '0')
+  return String(value).padStart(2, "0");
 }
 </script>
 
@@ -1221,19 +1322,19 @@ function pad(value: number) {
 
       <div class="clock" role="timer">
         <div class="clock__cell">
-          <b>{{ left ? left.days : '—' }}</b>
+          <b>{{ left ? left.days : "—" }}</b>
           <small>дней</small>
         </div>
         <div class="clock__cell">
-          <b>{{ left ? pad(left.hours) : '—' }}</b>
+          <b>{{ left ? pad(left.hours) : "—" }}</b>
           <small>часов</small>
         </div>
         <div class="clock__cell">
-          <b>{{ left ? pad(left.minutes) : '—' }}</b>
+          <b>{{ left ? pad(left.minutes) : "—" }}</b>
           <small>минут</small>
         </div>
         <div class="clock__cell">
-          <b>{{ left ? pad(left.seconds) : '—' }}</b>
+          <b>{{ left ? pad(left.seconds) : "—" }}</b>
           <small>секунд</small>
         </div>
       </div>
@@ -1291,19 +1392,20 @@ git commit -m "feat(landing): обратный отсчёт до торжест�
 ### Task 12: Подвал с раскрытием телефона
 
 **Files:**
+
 - Create: `app/components/TheFooter.vue`
 
 - [ ] **Step 1: Создать `app/components/TheFooter.vue`**
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue'
-import { wedding } from '../content/wedding'
-import { formatPhone, maskPhone } from '../utils/phone'
+import { ref } from "vue";
+import { wedding } from "../content/wedding";
+import { formatPhone, maskPhone } from "../utils/phone";
 
 // Номер скрыт до клика, как в Telegram: примитивный парсер со страницы
 // его не соберёт, а гостю достаточно одного нажатия.
-const revealed = ref(false)
+const revealed = ref(false);
 </script>
 
 <template>
@@ -1314,14 +1416,17 @@ const revealed = ref(false)
       v-if="revealed"
       class="foot__phone"
       :href="`tel:+${wedding.contactDigits}`"
-    >{{ formatPhone(wedding.contactDigits) }}</a>
+      >{{ formatPhone(wedding.contactDigits) }}</a
+    >
 
     <button
       v-else
       class="foot__phone foot__phone--masked"
       type="button"
       @click="revealed = true"
-    >{{ maskPhone(wedding.contactDigits) }}</button>
+    >
+      {{ maskPhone(wedding.contactDigits) }}
+    </button>
 
     <p v-if="!revealed" class="foot__hint">Нажмите, чтобы показать номер</p>
 
@@ -1342,7 +1447,7 @@ const revealed = ref(false)
 }
 
 .foot .eyebrow {
-  color: #9C8E77;
+  color: #9c8e77;
 }
 
 .foot__phone {
@@ -1350,7 +1455,7 @@ const revealed = ref(false)
   border: none;
   border-bottom: 1px solid rgba(232, 214, 174, 0.35);
   background: none;
-  color: #E8D6AE;
+  color: #e8d6ae;
   font-family: var(--serif);
   font-size: clamp(1.35rem, 4vw, 1.7rem);
   text-decoration: none;
@@ -1363,20 +1468,20 @@ const revealed = ref(false)
 }
 
 .foot__phone:hover {
-  border-bottom-color: #E8D6AE;
+  border-bottom-color: #e8d6ae;
 }
 
 .foot__hint {
   font-family: var(--sans);
   font-size: 11.5px;
   letter-spacing: 0.05em;
-  color: #9C8E77;
+  color: #9c8e77;
 }
 
 .foot__sign {
   max-width: 24rem;
   font-style: italic;
-  color: #C3B79F;
+  color: #c3b79f;
 }
 </style>
 ```
@@ -1395,6 +1500,7 @@ git commit -m "feat(landing): подвал, телефон раскрывает�
 Переверстать существующий компонент: напитки столбиком, спутников изначально нет, ошибки — под полями, а не одной строкой внизу.
 
 **Files:**
+
 - Modify: `app/components/RsvpForm.vue`
 - Modify: `app/composables/useRsvpForm.ts`
 - Test: `tests/composables/useRsvpForm.test.ts`
@@ -1404,27 +1510,27 @@ git commit -m "feat(landing): подвал, телефон раскрывает�
 Дописать в `tests/composables/useRsvpForm.test.ts`:
 
 ```ts
-  it('пустое ФИО даёт ошибку именно у поля fio', () => {
-    const { buildPayload, errors } = useRsvpForm()
-    buildPayload()
-    expect(errors.fields.fio).toBeTruthy()
-  })
+it("пустое ФИО даёт ошибку именно у поля fio", () => {
+  const { buildPayload, errors } = useRsvpForm();
+  buildPayload();
+  expect(errors.fields.fio).toBeTruthy();
+});
 
-  it('ошибка поля гаснет после исправления', () => {
-    const { form, buildPayload, errors } = useRsvpForm()
-    buildPayload()
-    form.fio = 'Иванов Иван'
-    buildPayload()
-    expect(errors.fields.fio).toBeUndefined()
-  })
+it("ошибка поля гаснет после исправления", () => {
+  const { form, buildPayload, errors } = useRsvpForm();
+  buildPayload();
+  form.fio = "Иванов Иван";
+  buildPayload();
+  expect(errors.fields.fio).toBeUndefined();
+});
 
-  it('несовместимый набор напитков даёт ошибку у поля drinks', () => {
-    const { form, buildPayload, errors } = useRsvpForm()
-    form.fio = 'Иванов Иван'
-    form.drinks = ['none', 'vodka']
-    buildPayload()
-    expect(errors.fields.drinks).toBeTruthy()
-  })
+it("несовместимый набор напитков даёт ошибку у поля drinks", () => {
+  const { form, buildPayload, errors } = useRsvpForm();
+  form.fio = "Иванов Иван";
+  form.drinks = ["none", "vodka"];
+  buildPayload();
+  expect(errors.fields.drinks).toBeTruthy();
+});
 ```
 
 - [ ] **Step 2: Запустить тесты и увидеть падение**
@@ -1437,32 +1543,34 @@ Expected: FAIL — `errors.fields` не существует.
 Заменить строку 20:
 
 ```ts
-  const errors = reactive<{ message?: string, fields: Record<string, string> }>({ fields: {} })
+const errors = reactive<{ message?: string; fields: Record<string, string> }>({
+  fields: {},
+});
 ```
 
 Заменить тело `buildPayload` (строки 32–40):
 
 ```ts
-  function buildPayload(): RsvpInput | null {
-    const parsed = rsvpSchema.safeParse(form)
+function buildPayload(): RsvpInput | null {
+  const parsed = rsvpSchema.safeParse(form);
 
-    // Zod отдаёт путь до поля (['companions', 0, 'fio']) — склеиваем его
-    // в ключ, по которому шаблон найдёт свою подпись под инпутом.
-    const fields: Record<string, string> = {}
-    if (!parsed.success) {
-      for (const issue of parsed.error.issues) {
-        const key = issue.path.join('.')
-        if (!fields[key]) fields[key] = issue.message
-      }
-      errors.fields = fields
-      errors.message = 'Проверьте отмеченные поля'
-      return null
+  // Zod отдаёт путь до поля (['companions', 0, 'fio']) — склеиваем его
+  // в ключ, по которому шаблон найдёт свою подпись под инпутом.
+  const fields: Record<string, string> = {};
+  if (!parsed.success) {
+    for (const issue of parsed.error.issues) {
+      const key = issue.path.join(".");
+      if (!fields[key]) fields[key] = issue.message;
     }
-
-    errors.fields = {}
-    errors.message = undefined
-    return parsed.data
+    errors.fields = fields;
+    errors.message = "Проверьте отмеченные поля";
+    return null;
   }
+
+  errors.fields = {};
+  errors.message = undefined;
+  return parsed.data;
+}
 ```
 
 - [ ] **Step 4: Запустить тесты**
@@ -1474,11 +1582,19 @@ Expected: PASS, 67 tests.
 
 ```vue
 <script setup lang="ts">
-import { useRsvpForm } from '../composables/useRsvpForm'
-import { wedding } from '../content/wedding'
-import { DRINK_OPTIONS, DRINK_LABELS } from '#shared/constants/drinks'
+import { useRsvpForm } from "../composables/useRsvpForm";
+import { wedding } from "../content/wedding";
+import { DRINK_OPTIONS, DRINK_LABELS } from "#shared/constants/drinks";
 
-const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, submit } = useRsvpForm()
+const {
+  form,
+  errors,
+  submitted,
+  addCompanion,
+  removeCompanion,
+  toggleDrink,
+  submit,
+} = useRsvpForm();
 </script>
 
 <template>
@@ -1488,10 +1604,12 @@ const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, sub
         <div class="form__head">
           <p class="eyebrow">Подтверждение</p>
           <h2>Будете ли вы с нами?</h2>
-          <p class="form__deadline">Ждём ответа до {{ wedding.rsvpDeadline }}</p>
+          <p class="form__deadline">
+            Ждём ответа до {{ wedding.rsvpDeadline }}
+          </p>
           <p class="form__lede">
-            Заполните форму, чтобы мы знали, кого ждать. Если придёте не один — добавьте спутников,
-            одной анкеты на всех достаточно.
+            Заполните форму, чтобы мы знали, кого ждать. Если придёте не один —
+            добавьте спутников, одной анкеты на всех достаточно.
           </p>
         </div>
 
@@ -1503,7 +1621,7 @@ const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, sub
           tabindex="-1"
           autocomplete="off"
           aria-hidden="true"
-        >
+        />
 
         <p v-if="errors.message" class="summary">{{ errors.message }}</p>
 
@@ -1516,7 +1634,7 @@ const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, sub
             autocomplete="name"
             placeholder="Иван Петров"
             :aria-invalid="Boolean(errors.fields.fio)"
-          >
+          />
           <p v-if="errors.fields.fio" class="error">{{ errors.fields.fio }}</p>
         </div>
 
@@ -1529,8 +1647,10 @@ const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, sub
             autocomplete="tel"
             placeholder="+7 900 000-00-00"
             :aria-invalid="Boolean(errors.fields.phone)"
-          >
-          <p v-if="errors.fields.phone" class="error">{{ errors.fields.phone }}</p>
+          />
+          <p v-if="errors.fields.phone" class="error">
+            {{ errors.fields.phone }}
+          </p>
         </div>
 
         <div class="field">
@@ -1541,17 +1661,27 @@ const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, sub
                 type="checkbox"
                 :checked="form.drinks.includes(opt)"
                 @change="toggleDrink(form, opt)"
-              >
+              />
               {{ DRINK_LABELS[opt] }}
             </label>
           </div>
-          <p v-if="errors.fields.drinks" class="error">{{ errors.fields.drinks }}</p>
+          <p v-if="errors.fields.drinks" class="error">
+            {{ errors.fields.drinks }}
+          </p>
         </div>
 
-        <div v-for="(companion, index) in form.companions" :key="index" class="companion">
+        <div
+          v-for="(companion, index) in form.companions"
+          :key="index"
+          class="companion"
+        >
           <div class="companion__head">
             <p class="companion__title">Спутник {{ index + 1 }}</p>
-            <button class="companion__drop" type="button" @click="removeCompanion(index)">
+            <button
+              class="companion__drop"
+              type="button"
+              @click="removeCompanion(index)"
+            >
               убрать
             </button>
           </div>
@@ -1564,7 +1694,7 @@ const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, sub
               type="text"
               placeholder="Мария Петрова"
               :aria-invalid="Boolean(errors.fields[`companions.${index}.fio`])"
-            >
+            />
             <p v-if="errors.fields[`companions.${index}.fio`]" class="error">
               {{ errors.fields[`companions.${index}.fio`] }}
             </p>
@@ -1572,13 +1702,17 @@ const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, sub
 
           <div class="field">
             <label :id="`companion-${index}-drinks`">Напитки</label>
-            <div class="drinks" role="group" :aria-labelledby="`companion-${index}-drinks`">
+            <div
+              class="drinks"
+              role="group"
+              :aria-labelledby="`companion-${index}-drinks`"
+            >
               <label v-for="opt in DRINK_OPTIONS" :key="opt" class="drink">
                 <input
                   type="checkbox"
                   :checked="companion.drinks.includes(opt)"
                   @change="toggleDrink(companion, opt)"
-                >
+                />
                 {{ DRINK_LABELS[opt] }}
               </label>
             </div>
@@ -1588,8 +1722,17 @@ const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, sub
           </div>
         </div>
 
-        <button v-if="form.companions.length < 3" class="addmore" type="button" @click="addCompanion">
-          {{ form.companions.length ? '+ Добавить ещё спутника' : '+ Я буду не один — добавить спутника' }}
+        <button
+          v-if="form.companions.length < 3"
+          class="addmore"
+          type="button"
+          @click="addCompanion"
+        >
+          {{
+            form.companions.length
+              ? "+ Добавить ещё спутника"
+              : "+ Я буду не один — добавить спутника"
+          }}
         </button>
 
         <div class="field">
@@ -1597,19 +1740,21 @@ const { form, errors, submitted, addCompanion, removeCompanion, toggleDrink, sub
           <textarea
             id="comment"
             v-model="form.comment"
-            placeholder="Аллергия, детское меню, приеду позже — что угодно"
+            placeholder="Аллергия, приеду позже — что угодно"
           />
         </div>
 
         <button class="submit" type="submit" :disabled="submitted.pending">
-          {{ submitted.pending ? 'Отправляем…' : 'Отправить' }}
+          {{ submitted.pending ? "Отправляем…" : "Отправить" }}
         </button>
       </form>
 
       <div v-else class="thanks">
         <p class="eyebrow">Ответ получен</p>
         <h2>Спасибо, ждём вас</h2>
-        <p class="form__lede">Если что-то изменится — позвоните нам, номер внизу страницы.</p>
+        <p class="form__lede">
+          Если что-то изменится — позвоните нам, номер внизу страницы.
+        </p>
       </div>
     </div>
   </section>
@@ -1686,7 +1831,7 @@ textarea {
 input[aria-invalid="true"],
 textarea[aria-invalid="true"] {
   border-color: var(--alarm);
-  background: #FBF1ED;
+  background: #fbf1ed;
 }
 
 .error {
@@ -1697,8 +1842,8 @@ textarea[aria-invalid="true"] {
 
 .summary {
   padding: 12px 14px;
-  border: 1px solid #D9B3A6;
-  background: #FBF1ED;
+  border: 1px solid #d9b3a6;
+  background: #fbf1ed;
   font-family: var(--sans);
   font-size: 13.5px;
   color: var(--alarm);
@@ -1734,11 +1879,11 @@ textarea[aria-invalid="true"] {
 }
 
 .drink:hover {
-  background: #F1EDE4;
+  background: #f1ede4;
 }
 
 .drink:has(input:checked) {
-  background: #EAEDE4;
+  background: #eaede4;
 }
 
 .companion {
@@ -1817,7 +1962,7 @@ textarea[aria-invalid="true"] {
 }
 
 .submit:hover:not(:disabled) {
-  background: #4B4238;
+  background: #4b4238;
 }
 </style>
 ```
@@ -1839,30 +1984,32 @@ git commit -m "feat(rsvp): форма в стиле приглашения, ош
 ### Task 14: Сборка страницы и OG-превью
 
 **Files:**
+
 - Modify: `app/pages/index.vue`
 
 - [ ] **Step 1: Заменить содержимое `app/pages/index.vue`**
 
 ```vue
 <script setup lang="ts">
-import { wedding } from '../content/wedding'
+import { wedding } from "../content/wedding";
 
-const title = `${wedding.groom} и ${wedding.bride} — ${wedding.dateLabel.replace('среда, ', '')}`
-const description = `Приглашаем вас на нашу свадьбу ${wedding.dateLabel}, ${wedding.timeLabel}. `
-  + `${wedding.venue.name} («${wedding.venue.subtitle}»), ${wedding.venue.address}, ${wedding.venue.settlement}.`
+const title = `${wedding.groom} и ${wedding.bride} — ${wedding.dateLabel.replace("среда, ", "")}`;
+const description =
+  `Приглашаем вас на нашу свадьбу ${wedding.dateLabel}, ${wedding.timeLabel}. ` +
+  `${wedding.venue.name} («${wedding.venue.subtitle}»), ${wedding.venue.address}, ${wedding.venue.settlement}.`;
 
 useSeoMeta({
   title,
   ogTitle: title,
   description,
   ogDescription: description,
-  ogImage: '/og-image.jpg',
-  ogType: 'website'
-})
+  ogImage: "/og-image.jpg",
+  ogType: "website",
+});
 
 useHead({
-  htmlAttrs: { lang: 'ru' }
-})
+  htmlAttrs: { lang: "ru" },
+});
 </script>
 
 <template>
@@ -1897,6 +2044,7 @@ git commit -m "feat(landing): сборка страницы и OG-превью"
 Компоненты тестами не покрыты — это единственная проверка того, что страница действительно работает.
 
 **Files:**
+
 - Create: `.claude/launch.json`
 
 - [ ] **Step 1: Создать `.claude/launch.json`**
@@ -1959,22 +2107,22 @@ git commit -m "chore: конфигурация дев-сервера для пр
 
 **Покрытие спеки:**
 
-| Требование спеки | Задача |
-|---|---|
-| Данные торжества в одном месте | Task 4 |
-| Семь секций в заданном порядке | Tasks 7–14 |
-| Палитра и типографика | Task 6 |
-| Только светлая тема | Task 6 (`color-scheme: light`, отсутствие тёмных токенов) |
-| Карта по клику | Task 9 |
-| Маскированный телефон | Tasks 5, 12 |
-| Восемь напитков | Task 1 |
-| «Не пью» взаимоисключающее (клиент) | Task 3 |
-| «Не пью» взаимоисключающее (`rsvpSchema`, `guestPatchSchema`) | Task 2 |
-| Валидация с подписями под полями | Task 13 |
-| Спутники до трёх, изначально ноль | Task 13 |
-| Таймер по фиксированному поясу | Tasks 5, 11 |
-| OG-превью | Task 14 |
-| Ручной прогон | Task 15 |
+| Требование спеки                                              | Задача                                                    |
+| ------------------------------------------------------------- | --------------------------------------------------------- |
+| Данные торжества в одном месте                                | Task 4                                                    |
+| Семь секций в заданном порядке                                | Tasks 7–14                                                |
+| Палитра и типографика                                         | Task 6                                                    |
+| Только светлая тема                                           | Task 6 (`color-scheme: light`, отсутствие тёмных токенов) |
+| Карта по клику                                                | Task 9                                                    |
+| Маскированный телефон                                         | Tasks 5, 12                                               |
+| Восемь напитков                                               | Task 1                                                    |
+| «Не пью» взаимоисключающее (клиент)                           | Task 3                                                    |
+| «Не пью» взаимоисключающее (`rsvpSchema`, `guestPatchSchema`) | Task 2                                                    |
+| Валидация с подписями под полями                              | Task 13                                                   |
+| Спутники до трёх, изначально ноль                             | Task 13                                                   |
+| Таймер по фиксированному поясу                                | Tasks 5, 11                                               |
+| OG-превью                                                     | Task 14                                                   |
+| Ручной прогон                                                 | Task 15                                                   |
 
 **Заглушки:** в плане нет «TBD» и «сделать по аналогии» — код приведён целиком в каждом шаге. Тексты истории и просьб помечены `// TODO: текст от молодожёнов` осознанно: это ожидаемый контент от заказчика, а не пробел плана.
 
