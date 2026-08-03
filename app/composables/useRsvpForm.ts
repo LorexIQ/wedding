@@ -12,6 +12,8 @@ export interface RsvpPrefill {
   phone?: string | null
   comment?: string | null
   drinks?: string[]
+  attending?: boolean | null
+  companions?: CompanionForm[]
 }
 
 export function useRsvpForm(prefill?: RsvpPrefill, initiallySubmitted = false) {
@@ -19,8 +21,9 @@ export function useRsvpForm(prefill?: RsvpPrefill, initiallySubmitted = false) {
     fio: prefill?.fio ?? '',
     phone: prefill?.phone ?? '',
     comment: prefill?.comment ?? '',
+    attending: prefill?.attending ?? null as boolean | null,
     drinks: prefill?.drinks ? [...prefill.drinks] : [],
-    companions: [] as CompanionForm[],
+    companions: prefill?.companions ? prefill.companions.map(c => ({ fio: c.fio, drinks: [...c.drinks] })) : [] as CompanionForm[],
     website: ''
   })
 

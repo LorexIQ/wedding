@@ -29,6 +29,7 @@ describe('useRsvpForm', () => {
   it('submit calls $fetch with a valid payload', async () => {
     const { form, submit } = useRsvpForm()
     form.fio = 'Иванов Иван'
+    form.attending = true
     const ok = await submit()
     expect(ok).toBe(true)
     expect($fetch).toHaveBeenCalledWith('/api/rsvp', expect.objectContaining({ method: 'POST' }))
@@ -88,13 +89,41 @@ describe('useRsvpForm', () => {
     expect(form.companions[1]!.drinks).toEqual(['vodka'])
   })
 
-  it('предзаполняет форму данными гостя, но не спутниками', () => {
-    const { form } = useRsvpForm({ fio: 'Иванов Иван', phone: '+79990000000', comment: 'Без орехов', drinks: ['red_dry'] })
+  it('предзаполняет форму данными гостя, включая спутников, если они переданы', () => {
+    const { form } = useRsvpForm({
+      fio: 'Иванов Иван', phone: '+79990000000', comment: 'Без орехов', drinks: ['red_dry'],
+      attending: true,
+      companions: [{ fio: 'Петров Пётр', drinks: ['sparkling'] }]
+    })
     expect(form.fio).toBe('Иванов Иван')
-    expect(form.phone).toBe('+79990000000')
-    expect(form.comment).toBe('Без орехов')
-    expect(form.drinks).toEqual(['red_dry'])
+    expect(form.attending).toBe(true)
+    expect(form.companions).toEqual([{ fio: 'Петров Пётр', drinks: ['sparkling'] }])
+  })
+
+  it('без переданных спутников форма пустая по спутникам, как раньше', () => {
+    const { form } = useRsvpForm({ fio: 'Иванов Иван' })
     expect(form.companions).toEqual([])
+  })
+
+  it('без префилла attending пустой (null)', () => {
+    const { form } = useRsvpForm()
+    expect(form.attending).toBeNull()
+  })
+
+  it('buildPayload требует выбранного attending', () => {
+    const { form, buildPayload, errors } = useRsvpForm()
+    form.fio = 'Иванов Иван'
+    const payload = buildPayload()
+    expect(payload).toBeNull()
+    expect(errors.fields.attending).toBeTruthy()
+  })
+
+  it('buildPayload проходит, когда attending выбран', () => {
+    const { form, buildPayload } = useRsvpForm()
+    form.fio = 'Иванов Иван'
+    form.attending = false
+    const payload = buildPayload()
+    expect(payload?.attending).toBe(false)
   })
 
   it('без префилла форма пустая, как раньше', () => {
