@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { createTestDb } from '../../helpers/testDb'
 import { createMockEvent } from '../../helpers/mockEvent'
-import { guests } from '../../../server/database/schema'
-import inviteGetHandler, { resolveInvite } from '../../../server/api/invite/[code].get'
+import { guests, companions, settings } from '../../../server/database/schema'
+import inviteGetHandler, { resolveInvite, getInviteResponse } from '../../../server/api/invite/[code].get'
 
 function seedInvite(testDb: ReturnType<typeof createTestDb>) {
   const now = new Date()
@@ -27,6 +27,36 @@ describe('resolveInvite', () => {
     const testDb = createTestDb()
     const guest = resolveInvite('NOPE000000', testDb)
     expect(guest).toBeNull()
+  })
+})
+
+describe('GET /api/invite/:code — форма ответа', () => {
+  it('возвращает attending, allowCompanions, companions и rsvpDeadlineAt', () => {
+    const testDb = createTestDb()
+    seedInvite(testDb)
+    testDb.insert(companions).values({ guestId: 1, fio: 'Петров Пётр', drinks: ['sparkling'] }).run()
+    testDb.insert(settings).values({ id: 1, rsvpDeadlineAt: new Date('2026-08-10T21:00:00+03:00') }).run()
+
+    const response = getInviteResponse('ABC1234567', testDb)!
+
+    expect(response.allowCompanions).toBe(true)
+    expect(response.attending).toBeNull()
+    expect(response.companions).toEqual([{ id: 1, guestId: 1, fio: 'Петров Пётр', drinks: ['sparkling'] }])
+    expect(response.rsvpDeadlineAt).toBe(new Date('2026-08-10T21:00:00+03:00').getTime())
+  })
+
+  it('rsvpDeadlineAt равен null, если дедлайн не задан', () => {
+    const testDb = createTestDb()
+    seedInvite(testDb)
+
+    const response = getInviteResponse('ABC1234567', testDb)!
+
+    expect(response.rsvpDeadlineAt).toBeNull()
+  })
+
+  it('возвращает null для неизвестного кода', () => {
+    const testDb = createTestDb()
+    expect(getInviteResponse('NOPE000000', testDb)).toBeNull()
   })
 })
 
