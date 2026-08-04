@@ -24,7 +24,12 @@ export default defineNuxtConfig({
     sessionSecret: process.env.SESSION_SECRET || '',
     public: {
       metrikaId: process.env.METRIKA_ID || '111173886',
-      contactPhone: process.env.CONTACT_PHONE || wedding.contactDigits
+      // Deliberately NOT read via process.env here (unlike metrikaId) — this key needs to
+      // change without a rebuild, so it relies on Nuxt's own NUXT_PUBLIC_CONTACT_PHONE env
+      // override, which Nitro re-reads at container *startup*, not at `nuxt build` time.
+      // A raw process.env read here would bake in whatever was set during the Docker build
+      // step and ignore the value docker-compose injects at runtime.
+      contactPhone: wedding.contactDigits
     }
   }
 })
