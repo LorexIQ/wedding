@@ -5,7 +5,10 @@ import { formatPhone, maskPhone } from '../utils/phone'
 
 // Номер скрыт до клика, как в Telegram: примитивный парсер со страницы
 // его не соберёт, а гостю достаточно одного нажатия.
-const contactDigits = useRuntimeConfig().public.contactPhone
+// String(...) — обязателен: значение приходит из NUXT_PUBLIC_CONTACT_PHONE,
+// а Nuxt/Nitro прогоняет override через destr() и число из одних цифр
+// («79066951293») превращается в JS number, ломая .slice() в phone.ts.
+const contactDigits = String(useRuntimeConfig().public.contactPhone)
 const revealed = ref(false)
 </script>
 
