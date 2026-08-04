@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
+import gsap from 'gsap'
 import { wedding } from '../content/wedding'
 
 /**
@@ -35,13 +36,20 @@ import { wedding } from '../content/wedding'
 const props = defineProps<{ alreadyOpened: boolean }>()
 const emit = defineEmits<{ opened: [] }>()
 
-const SPEED_MS = 950
+const SPEED_MS = 650
 const FLAP_HANDOFF_MS = Math.round(SPEED_MS * 0.48)
 /** Пауза после открытия флапа — на неё видно лист в вырезе, до отъезда конверта. */
-const REVEAL_DELAY_MS = Math.round(SPEED_MS * 1.15)
-/** = длительность transform-перехода .envelope-visual--leaving и встречного ему .letter-clip--counter. */
-const ENVELOPE_EXIT_MS = 900
-const FLIP_MS = 750
+const REVEAL_DELAY_MS = Math.round(SPEED_MS * 1.05)
+/** Длительность GSAP-твина отъезда конверта и встречного ему движения листа. */
+const ENVELOPE_EXIT_MS = 550
+const FLIP_MS = 450
+
+const FLAP_DUR = SPEED_MS / 1000
+const HANDOFF_POS = FLAP_HANDOFF_MS / 1000
+const REVEAL_POS = REVEAL_DELAY_MS / 1000
+const EXIT_DUR = ENVELOPE_EXIT_MS / 1000
+const FLIP_POS = REVEAL_POS + EXIT_DUR
+const FLIP_DUR = FLIP_MS / 1000
 
 const open = ref(false)
 const flapOnTop = ref(true)
@@ -52,59 +60,96 @@ const revealed = ref(props.alreadyOpened)
 const showHint = ref(false)
 
 const gateStyle = {
-  '--speed': `${SPEED_MS}ms`,
-  '--envelope-exit': `${ENVELOPE_EXIT_MS}ms`
+  '--speed': `${SPEED_MS}ms`
 }
 
 const peekCard = ref<HTMLElement | null>(null)
 const siteWrap = ref<HTMLElement | null>(null)
+const flapEl = ref<HTMLElement | null>(null)
+const envelopeVisualEl = ref<HTMLElement | null>(null)
+const letterClipEl = ref<HTMLElement | null>(null)
+const letterWobbleEl = ref<HTMLElement | null>(null)
 
 let hintTimer = 0
-let handoffTimer = 0
-let envelopeExitTimer = 0
-let growTimer = 0
+const timeline = ref<gsap.core.Timeline | null>(null)
+/** Координаты FLIP-зума, измеренные при отъезде конверта — твин читает их лениво (function-based values), т.к. на момент сборки timeline рект ещё не существует. */
+const flipFrom = { x: 0, y: 0, scaleX: 1, scaleY: 1 }
 
 function finishReveal() {
   revealed.value = true
   emit('opened')
 }
 
-/** Шаг 3: FLIP карточки-письма в настоящий сайт. Конверт к этому моменту уже уехал. */
-function growPage() {
-  const card = peekCard.value
-  const wrap = siteWrap.value
-  if (!card || !wrap) {
-    finishReveal()
-    return
-  }
+/**
+ * Один gsap.timeline() на весь сценарий вместо цепочки setTimeout — единственный
+ * .kill() в onUnmounted гарантированно останавливает все фазы разом, поэтому
+ * post-unmount emit('opened') структурно невозможен, а не просто отловлен вручную.
+ */
+function buildTimeline() {
+  const tl = gsap.timeline()
 
-  const rect = card.getBoundingClientRect()
-  const vw = window.innerWidth
-  const vh = window.innerHeight
-  const dx = rect.left + rect.width / 2 - vw / 2
-  const dy = rect.top + rect.height / 2 - vh / 2
-  const sx = rect.width / vw
-  const sy = rect.height / vh
+  // Шаг 1: флап переворачивается с overshoot, с полпути перестаёт быть "поверх".
+  tl.to(flapEl.value, {
+    rotateX: 178,
+    duration: FLAP_DUR,
+    ease: 'back.out(1.7)'
+  }, 0)
+  tl.call(() => {
+    flapOnTop.value = false
+  }, [], HANDOFF_POS)
 
-  pageGrowing.value = true
+  // Шаг 2: конверт уезжает вниз, лист тем же duration/ease встречным translateY гасит сдвиг.
+  tl.to([envelopeVisualEl.value, letterClipEl.value], {
+    y: (i: number) => (i === 0 ? '100vh' : '-100vh'),
+    duration: EXIT_DUR,
+    ease: 'power2.in',
+    onStart: () => {
+      envelopeLeaving.value = true
+    }
+  }, REVEAL_POS)
 
-  requestAnimationFrame(() => {
-    wrap.style.transition = 'none'
-    wrap.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`
+  // Секундарное движение листа: мгновенный сдвиг в сторону + elastic-возврат в исходную позицию.
+  tl.set(letterWobbleEl.value, { rotate: 1.5, x: 3 }, REVEAL_POS)
+  tl.to(letterWobbleEl.value, {
+    rotate: 0,
+    x: 0,
+    duration: 0.3,
+    ease: 'elastic.out(1, 0.4)'
+  }, REVEAL_POS)
 
-    requestAnimationFrame(() => {
-      wrap.style.transition = `transform ${FLIP_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`
-      wrap.style.transform = 'translate(0px, 0px) scale(1, 1)'
-    })
-  })
+  // Шаг 3: FLIP карточки-письма в настоящий сайт. Конверт к этому моменту уже уехал.
+  tl.call(() => {
+    const card = peekCard.value
+    if (card && siteWrap.value) {
+      const rect = card.getBoundingClientRect()
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      flipFrom.x = rect.left + rect.width / 2 - vw / 2
+      flipFrom.y = rect.top + rect.height / 2 - vh / 2
+      flipFrom.scaleX = rect.width / vw
+      flipFrom.scaleY = rect.height / vh
+    }
+    pageGrowing.value = true
+  }, [], FLIP_POS)
+  tl.fromTo(siteWrap.value,
+    {
+      x: () => flipFrom.x,
+      y: () => flipFrom.y,
+      scaleX: () => flipFrom.scaleX,
+      scaleY: () => flipFrom.scaleY
+    },
+    {
+      x: 0,
+      y: 0,
+      scaleX: 1,
+      scaleY: 1,
+      duration: FLIP_DUR,
+      ease: 'elastic.out(1, 0.6)',
+      onComplete: finishReveal
+    },
+    FLIP_POS)
 
-  window.setTimeout(finishReveal, FLIP_MS)
-}
-
-/** Шаг 2: конверт уезжает вниз, лист встречным transform'ом стоит на месте. */
-function startEnvelopeExit() {
-  envelopeLeaving.value = true
-  envelopeExitTimer = window.setTimeout(growPage, ENVELOPE_EXIT_MS)
+  return tl
 }
 
 function onOpen() {
@@ -119,10 +164,7 @@ function onOpen() {
   }
 
   open.value = true
-  handoffTimer = window.setTimeout(() => {
-    flapOnTop.value = false
-  }, FLAP_HANDOFF_MS)
-  growTimer = window.setTimeout(startEnvelopeExit, REVEAL_DELAY_MS)
+  timeline.value = buildTimeline()
 }
 
 onMounted(() => {
@@ -134,9 +176,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.clearTimeout(hintTimer)
-  window.clearTimeout(handoffTimer)
-  window.clearTimeout(envelopeExitTimer)
-  window.clearTimeout(growTimer)
+  timeline.value?.kill()
 })
 </script>
 
@@ -174,18 +214,22 @@ onUnmounted(() => {
            (perspective), поэтому z-index передней стенки виден только
            изнутри. Только так стенка — реальный непрозрачный элемент —
            физически заслоняет письмо, вместо имитации масками. -->
-      <div class="envelope-visual" :class="{ 'envelope-visual--leaving': envelopeLeaving }">
+      <div ref="envelopeVisualEl" class="envelope-visual" :class="{ 'envelope-visual--leaving': envelopeLeaving }">
         <div class="envelope__panel" />
 
         <!-- Письмо: z=3 — выше задней панели (1), НИЖЕ передней стенки (4),
              которая его и закрывает. Само оно не двигается никогда: при
-             отъезде конверта гасит сдвиг родителя встречным transform'ом
-             (--counter), поэтому стоит в центре экрана, а стенка сползает
-             с него вниз. -->
-        <div class="letter-clip" :class="{ 'letter-clip--counter': envelopeLeaving }">
-          <div v-if="!pageGrowing" ref="peekCard" class="peek-card">
-            <p class="peek-card__eyebrow">Приглашение</p>
-            <h3 class="peek-card__title">{{ wedding.groom }} и {{ wedding.bride }}</h3>
+             отъезде конверта GSAP гасит сдвиг родителя встречным translateY
+             тем же duration/ease, поэтому стоит в центре экрана, а стенка
+             сползает с него вниз. .letter-wobble — отдельная обёртка для
+             секундарного покачивания листа, не трогающая эту точную
+             компенсацию (два transform'а на разных элементах складываются). -->
+        <div ref="letterClipEl" class="letter-clip">
+          <div ref="letterWobbleEl" class="letter-wobble">
+            <div v-if="!pageGrowing" ref="peekCard" class="peek-card">
+              <p class="peek-card__eyebrow">Приглашение</p>
+              <h3 class="peek-card__title">{{ wedding.groom }} и {{ wedding.bride }}</h3>
+            </div>
           </div>
         </div>
 
@@ -210,7 +254,7 @@ onUnmounted(() => {
              вырванный уголок. -->
         <div class="envelope__seal envelope__seal--body">✦</div>
 
-        <div class="envelope__flap" :class="{ 'envelope__flap--open': open }" :style="{ zIndex: flapOnTop ? 10 : 0 }">
+        <div ref="flapEl" class="envelope__flap" :class="{ 'envelope__flap--open': open }" :style="{ zIndex: flapOnTop ? 10 : 0 }">
           <div class="envelope__flap-face envelope__flap-face--front" />
           <div class="envelope__flap-face envelope__flap-face--back" />
 
@@ -285,14 +329,12 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   perspective: 1800px;
-  transition: transform var(--envelope-exit) cubic-bezier(0.55, 0, 0.55, 1);
 }
 
-/* 100vh, а не проценты от своей высоты: конверт не растворяется, поэтому
-   обязан именно уехать ЗА край экрана — на процентах от собственной высоты
-   его низ оставался бы в кадре полосой. */
+/* Само 100vh-смещение задаёт GSAP-твин (см. buildTimeline) — 100vh, а не
+   проценты от своей высоты: конверт не растворяется, поэтому обязан именно
+   уехать ЗА край экрана, иначе его низ оставался бы в кадре полосой. */
 .envelope-visual--leaving {
-  transform: translateY(100vh);
   pointer-events: none;
 }
 
@@ -433,7 +475,10 @@ onUnmounted(() => {
   height: 48%;
   transform-style: preserve-3d;
   transform-origin: 50% 0%;
-  transition: transform var(--speed) cubic-bezier(0.65, 0, 0.35, 1), filter var(--speed) ease;
+  /* rotateX сам по себе теперь ведёт GSAP-твин (см. buildTimeline) — здесь
+     остаётся только переход тени, иначе CSS-transition на transform
+     конфликтовал бы с покадровыми inline-стилями от GSAP. */
+  transition: filter var(--speed) ease;
   transform: rotateX(0deg);
   /* Закрытая крышка лежит в одной плоскости с конвертом — падать тени
      неоткуда. Прозрачная drop-shadow, а не none: обе стадии должны быть
@@ -443,7 +488,6 @@ onUnmounted(() => {
 
 /* Тень появляется, только когда крышка реально поднялась над конвертом. */
 .envelope__flap--open {
-  transform: rotateX(178deg);
   filter: drop-shadow(0 6px 12px rgba(54, 59, 50, 0.22));
 }
 
@@ -495,16 +539,21 @@ onUnmounted(() => {
   inset: 0;
   z-index: 3;
   pointer-events: none;
-  transition: transform var(--envelope-exit) cubic-bezier(0.55, 0, 0.55, 1);
+  /* Встречный сдвиг, гасящий отъезд конверта, — один GSAP-твин анимирует
+     этот элемент и .envelope-visual одновременно, с тем же duration/ease и
+     противоположным по знаку translateY (оба в vh, поэтому сравнимы
+     буквально): +100vh родителя и -100vh этого элемента компенсируются на
+     КАЖДОМ кадре, а не только в конце. Письмо стоит неподвижно, стенка
+     сползает с него вниз и открывает его. */
 }
 
-/* Встречный сдвиг, гасящий отъезд конверта. Длительность и кривая ОБЯЗАНЫ
-   совпадать с .envelope-visual, а величина — быть той же с обратным знаком
-   (обе в vh, поэтому сравнимы буквально): тогда +100vh родителя и -100vh
-   потомка компенсируются на КАЖДОМ кадре, а не только в конце. Письмо
-   стоит неподвижно, стенка сползает с него вниз и открывает его. */
-.letter-clip--counter {
-  transform: translateY(-100vh);
+/* Обёртка секундарного покачивания листа — независимый transform поверх
+   letter-clip'а. GSAP не умеет композировать два твина на transform одного
+   элемента (второй перезаписал бы первый), поэтому wobble живёт на своём
+   узле, а точная компенсация выше остаётся нетронутой на letter-clip. */
+.letter-wobble {
+  position: absolute;
+  inset: 0;
 }
 
 .peek-card {
