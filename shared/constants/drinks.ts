@@ -1,24 +1,26 @@
 export const DRINK_OPTIONS = [
-  'red_dry',
-  'red_semi',
-  'white_dry',
-  'white_semi',
+  'vine_red',
+  'vine_whire',
   'sparkling',
-  'brandy',
+  'scotch',
   'vodka',
+  'moonshine',
+  'rum',
+  'martini',
   'none'
 ] as const
 
 export type DrinkOption = typeof DRINK_OPTIONS[number]
 
 export const DRINK_LABELS: Record<DrinkOption, string> = {
-  red_dry: 'Красное сухое',
-  red_semi: 'Красное полусладкое',
-  white_dry: 'Белое сухое',
-  white_semi: 'Белое полусладкое',
+  vine_red: 'Вино красное',
+  vine_whire: 'Вино белое',
   sparkling: 'Шампанское',
-  brandy: 'Коньяк',
+  scotch: 'Виски',
   vodka: 'Водка',
+  moonshine: 'Самогонка',
+  rum: 'Ром',
+  martini: 'Мартини',
   none: 'Не пью'
 }
 

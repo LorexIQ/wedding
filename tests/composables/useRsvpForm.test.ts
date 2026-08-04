@@ -91,7 +91,7 @@ describe('useRsvpForm', () => {
 
   it('предзаполняет форму данными гостя, включая спутников, если они переданы', () => {
     const { form } = useRsvpForm({
-      fio: 'Иванов Иван', phone: '+79990000000', comment: 'Без орехов', drinks: ['red_dry'],
+      fio: 'Иванов Иван', phone: '+7 999 000-00-00', comment: 'Без орехов', drinks: ['red_dry'],
       attending: true,
       companions: [{ fio: 'Петров Пётр', drinks: ['sparkling'] }]
     })

@@ -28,7 +28,7 @@ describe('submitRsvp', () => {
 
     const result = await submitRsvp({
       fio: 'Иванов Иван Иванович',
-      phone: '+79990000000',
+      phone: '+7 999 000-00-00',
       comment: '',
       attending: true,
       drinks: ['red_dry'],

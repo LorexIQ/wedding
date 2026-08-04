@@ -7,6 +7,11 @@ const drinksField = z
   .array(z.enum(DRINK_OPTIONS))
   .refine(isDrinkSetValid, DRINK_CLASH)
 
+const phoneField = z.string().trim()
+  .regex(/^\+7 \d{3} \d{3}-\d{2}-\d{2}$/, 'Введите телефон полностью или очистите поле')
+  .optional()
+  .or(z.literal(''))
+
 export const companionSchema = z.object({
   fio: z.string().trim().min(1, 'Укажите ФИО сопровождающего').max(200),
   drinks: drinksField.default([])
@@ -14,7 +19,7 @@ export const companionSchema = z.object({
 
 export const rsvpSchema = z.object({
   fio: z.string().trim().min(1, 'Укажите ФИО').max(200),
-  phone: z.string().trim().max(30).optional().or(z.literal('')),
+  phone: phoneField,
   comment: z.string().trim().max(1000).optional().or(z.literal('')),
   attending: z.boolean({
     required_error: 'Укажите, придёте ли вы',
@@ -29,7 +34,7 @@ export type RsvpInput = z.infer<typeof rsvpSchema>
 
 export const guestPatchSchema = z.object({
   fio: z.string().trim().max(200).optional(),
-  phone: z.string().trim().max(30).optional(),
+  phone: phoneField,
   comment: z.string().trim().max(1000).optional(),
   drinks: drinksField.optional(),
   submitted: z.boolean().optional(),
@@ -42,7 +47,7 @@ export type GuestPatchInput = z.infer<typeof guestPatchSchema>
 
 export const guestCreateSchema = z.object({
   fio: z.string().trim().max(200).optional(),
-  phone: z.string().trim().max(30).optional(),
+  phone: phoneField,
   comment: z.string().trim().max(1000).optional(),
   drinks: drinksField.optional(),
   attending: z.boolean().nullable().optional(),

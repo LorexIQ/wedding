@@ -1654,7 +1654,7 @@ const {
         </div>
 
         <div class="field">
-          <label id="drinksLabel">Что предпочитаете из напитков</label>
+          <label id="drinksLabel">Что предпочитаете из алкоголя</label>
           <div class="drinks" role="group" aria-labelledby="drinksLabel">
             <label v-for="opt in DRINK_OPTIONS" :key="opt" class="drink">
               <input

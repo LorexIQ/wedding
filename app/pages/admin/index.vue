@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { IMaskComponent } from 'vue-imask'
 import { useAdminGuests, type GuestRecord } from '../../composables/useAdminGuests'
 import { useAdminSettings } from '../../composables/useAdminSettings'
 import { DRINK_OPTIONS, DRINK_LABELS } from '#shared/constants/drinks'
@@ -174,7 +175,7 @@ function attendingLabel(attending: boolean | null) {
         <tr v-for="guest in guestsList" :key="guest.id">
           <template v-if="editingId === guest.id">
             <td><input v-model="editForm.fio" type="text"></td>
-            <td><input v-model="editForm.phone" type="tel"></td>
+            <td><IMaskComponent v-model="editForm.phone" mask="+7 000 000-00-00" type="tel" /></td>
             <td>
               <label v-for="opt in DRINK_OPTIONS" :key="opt">
                 <input v-model="editForm.drinks" type="checkbox" :value="opt">
@@ -223,7 +224,7 @@ function attendingLabel(attending: boolean | null) {
 
         <tr v-if="creating">
           <td><input v-model="draft.fio" type="text" placeholder="ФИО"></td>
-          <td><input v-model="draft.phone" type="tel" placeholder="Телефон"></td>
+          <td><IMaskComponent v-model="draft.phone" mask="+7 000 000-00-00" type="tel" placeholder="Телефон" /></td>
           <td>
             <label v-for="opt in DRINK_OPTIONS" :key="opt">
               <input v-model="draft.drinks" type="checkbox" :value="opt">

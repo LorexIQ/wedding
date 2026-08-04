@@ -6,7 +6,7 @@ describe('rsvpSchema', () => {
   it('accepts a valid payload', () => {
     const result = rsvpSchema.safeParse({
       fio: 'Иванов Иван',
-      phone: '+79990000000',
+      phone: '+7 999 000-00-00',
       comment: '',
       attending: true,
       drinks: ['red_dry'],
@@ -14,6 +14,20 @@ describe('rsvpSchema', () => {
       website: ''
     })
     expect(result.success).toBe(true)
+  })
+
+  it('accepts an empty phone', () => {
+    const result = rsvpSchema.safeParse({
+      fio: 'Иванов Иван', phone: '', attending: true, drinks: [], companions: [], website: ''
+    })
+    expect(result.success).toBe(true)
+  })
+
+  it('rejects a phone that does not match the masked format', () => {
+    const result = rsvpSchema.safeParse({
+      fio: 'Иванов Иван', phone: '+79990000000', attending: true, drinks: [], companions: [], website: ''
+    })
+    expect(result.success).toBe(false)
   })
 
   it('rejects empty fio', () => {
@@ -116,6 +130,16 @@ describe('guestCreateSchema (POST /api/admin/guests — создание инв�
     expect(result.success).toBe(true)
   })
 
+  it('принимает корректно оформленный телефон', () => {
+    const result = guestCreateSchema.safeParse({ phone: '+7 999 000-00-00' })
+    expect(result.success).toBe(true)
+  })
+
+  it('отклоняет телефон в неверном формате', () => {
+    const result = guestCreateSchema.safeParse({ phone: '89990000000' })
+    expect(result.success).toBe(false)
+  })
+
   it('отклоняет несовместимый набор напитков', () => {
     const result = guestCreateSchema.safeParse({ drinks: ['none', 'vodka'] })
     expect(result.success).toBe(false)
@@ -146,6 +170,16 @@ describe('guestPatchSchema — новые поля fio/submitted/envelopeOpened'
   it('принимает пустую строку fio, позволяя очистить ФИО', () => {
     const result = guestPatchSchema.safeParse({ fio: '' })
     expect(result.success).toBe(true)
+  })
+
+  it('принимает корректно оформленный телефон', () => {
+    const result = guestPatchSchema.safeParse({ phone: '+7 999 000-00-00' })
+    expect(result.success).toBe(true)
+  })
+
+  it('отклоняет телефон в неверном формате', () => {
+    const result = guestPatchSchema.safeParse({ phone: '89990000000' })
+    expect(result.success).toBe(false)
   })
 })
 

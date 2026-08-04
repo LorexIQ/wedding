@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { IMaskComponent } from 'vue-imask'
 import { useRsvpForm } from '../composables/useRsvpForm'
 import { DRINK_OPTIONS, DRINK_LABELS } from '#shared/constants/drinks'
 import { formatFio } from '../utils/formatFio'
@@ -154,20 +155,21 @@ async function onSubmit() {
 
         <div class="field">
           <label for="phone">Телефон</label>
-          <input
+          <IMaskComponent
             id="phone"
             v-model="form.phone"
+            mask="+7 000 000-00-00"
             type="tel"
             autocomplete="tel"
             placeholder="+7 900 000-00-00"
             :aria-invalid="Boolean(errors.fields.phone)"
-          >
+          />
           <p v-if="errors.fields.phone" class="error">{{ errors.fields.phone }}</p>
         </div>
 
         <template v-if="form.attending">
           <div class="field">
-            <label id="drinksLabel">Что предпочитаете из напитков</label>
+            <label id="drinksLabel">Что предпочитаете из алкоголя</label>
             <div class="drinks" role="group" aria-labelledby="drinksLabel">
               <label v-for="opt in DRINK_OPTIONS" :key="opt" class="drink">
                 <input
