@@ -1,3 +1,32 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  --color-sage-50: #F4F6F1;
+  --color-sage-100: #E7ECDF;
+  --color-sage-200: #D2DBC3;
+  --color-sage-300: #B7C6A2;
+  --color-sage-400: #A3B78D;
+  --color-sage-500: #93A47F;
+  --color-sage-600: #7C8D6A;
+  --color-sage-700: #647256;
+  --color-sage-800: #4E5943;
+  --color-sage-900: #3B4333;
+  --color-sage-950: #262B21;
+
+  --color-wheat-50: #EEF0E9;
+  --color-wheat-100: #DCE0D0;
+  --color-wheat-200: #BDC5AB;
+  --color-wheat-300: #9CAA85;
+  --color-wheat-400: #83916A;
+  --color-wheat-500: #6F7D5A;
+  --color-wheat-600: #5C6849;
+  --color-wheat-700: #49523A;
+  --color-wheat-800: #383F2D;
+  --color-wheat-900: #2A2F22;
+  --color-wheat-950: #1B1E16;
+}
+
 /* Приглашение живёт в одном визуальном мире — тёплой льняной печати.
    Тёмная тема сознательно не делается: приглашение должно выглядеть
    одинаково у всех, а переключатель темы ломает бумажную метафору. */

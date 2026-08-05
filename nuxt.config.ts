@@ -3,6 +3,13 @@ import { wedding } from './app/content/wedding'
 export default defineNuxtConfig({
   compatibilityDate: '2026-07-30',
   devtools: { enabled: true },
+  modules: ['@nuxt/ui'],
+  ui: {
+    // Site is permanently light-only (see app/assets/css/main.css) — never let
+    // Nuxt UI's bundled @nuxtjs/color-mode module touch color-scheme or inject
+    // a theme toggle.
+    colorMode: false
+  },
   css: ['~/assets/css/main.css'],
   app: {
     head: {
