@@ -187,7 +187,7 @@ function attendingColor(attending: boolean | null): 'success' | 'error' | 'neutr
           <tbody>
             <tr v-for="guest in guests" :key="guest.id" class="border-b border-gray-100 align-top">
               <template v-if="editingId === guest.id">
-                <GuestFormFields v-model:state="editForm" layout="row" :errors="editErrors" />
+                <GuestFormFields :state="editForm" layout="row" :errors="editErrors" />
                 <td class="px-3 py-2">{{ guest.companions.map((c) => c.fio).join(', ') }}</td>
                 <td colspan="3" />
                 <td class="px-3 py-2">
@@ -245,7 +245,7 @@ function attendingColor(attending: boolean | null): 'success' | 'error' | 'neutr
             </tr>
 
             <tr v-if="creating" class="border-b border-gray-100 align-top">
-              <GuestFormFields v-model:state="draft" layout="row" :errors="createErrors" />
+              <GuestFormFields :state="draft" layout="row" :errors="createErrors" />
               <td />
               <td colspan="3" />
               <td class="px-3 py-2">
@@ -270,7 +270,7 @@ function attendingColor(attending: boolean | null): 'success' | 'error' | 'neutr
       <div class="md:hidden flex flex-col gap-3">
         <UCard v-for="guest in guests" :key="guest.id">
           <template v-if="editingId === guest.id">
-            <GuestFormFields v-model:state="editForm" layout="stack" :errors="editErrors" />
+            <GuestFormFields :state="editForm" layout="stack" :errors="editErrors" />
             <div class="flex gap-2 mt-3">
               <UButton size="xs" @click="onEditSubmit(guest)">
                 Сохранить
@@ -324,7 +324,7 @@ function attendingColor(attending: boolean | null): 'success' | 'error' | 'neutr
         </UCard>
 
         <UCard v-if="creating">
-          <GuestFormFields v-model:state="draft" layout="stack" :errors="createErrors" />
+          <GuestFormFields :state="draft" layout="stack" :errors="createErrors" />
           <div class="flex gap-2 mt-3">
             <UButton size="xs" @click="onCreateSubmit">
               Создать

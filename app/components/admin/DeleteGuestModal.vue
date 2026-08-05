@@ -13,7 +13,7 @@ function onConfirm() {
 
 <template>
   <UModal
-    v-model="open"
+    v-model:open="open"
     title="Удалить гостя?"
     :description="props.guest ? `«${props.guest.fio || 'Без имени'}» будет удалён без возможности восстановления.` : ''"
   >

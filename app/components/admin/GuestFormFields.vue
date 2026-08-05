@@ -12,12 +12,17 @@ export interface GuestFormState {
   allowCompanions: boolean
 }
 
-defineProps<{
+const props = defineProps<{
   layout: 'row' | 'stack'
   errors: Record<string, string>
+  state: GuestFormState
 }>()
 
-const state = defineModel<GuestFormState>('state', { required: true })
+// Mirrors Nuxt UI's own UInput `base` slot classes (outline variant, primary
+// color, md size) so the plain IMaskComponent-rendered <input> tracks the
+// sage/stone theme instead of a hardcoded gray border — vue-imask renders a
+// bare <input>, so it can't consume UInput's `:ui`/theme machinery directly.
+const maskedInputClass = 'w-full rounded-md border-0 appearance-none placeholder:text-dimmed disabled:cursor-not-allowed disabled:opacity-75 transition-colors px-2.5 py-1.5 text-base/5 text-highlighted bg-default ring ring-inset ring-accented outline-primary/25 focus-visible:outline-3 focus-visible:ring-primary md:text-sm'
 
 const drinkItems = DRINK_OPTIONS.map((opt) => ({ label: DRINK_LABELS[opt], value: opt }))
 
@@ -33,7 +38,7 @@ const allowCompanionsItems = [
 ]
 
 function onFioBlur() {
-  state.value.fio = formatFio(state.value.fio)
+  props.state.fio = formatFio(props.state.fio)
 }
 </script>
 
@@ -51,7 +56,7 @@ function onFioBlur() {
           mask="+7 000 000-00-00"
           type="tel"
           placeholder="Телефон"
-          class="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm bg-transparent"
+          :class="maskedInputClass"
         />
       </UFormField>
     </td>
@@ -87,7 +92,7 @@ function onFioBlur() {
         mask="+7 000 000-00-00"
         type="tel"
         placeholder="Телефон"
-        class="w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm bg-transparent"
+        :class="maskedInputClass"
       />
     </UFormField>
     <UFormField label="Напитки" name="drinks" :error="errors.drinks">
