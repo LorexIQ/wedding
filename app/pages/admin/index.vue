@@ -5,29 +5,13 @@ import { useAdminGuests, type GuestRecord } from '../../composables/useAdminGues
 import { useAdminSettings } from '../../composables/useAdminSettings'
 import { DRINK_OPTIONS, DRINK_LABELS } from '#shared/constants/drinks'
 import { formatFio } from '../../utils/formatFio'
+import SettingsPanel from '../../components/admin/SettingsPanel.vue'
 
 definePageMeta({ middleware: 'admin' })
 
 const { guestsList, loading, fetchGuests, createGuestInvite, patchGuest, removeGuest } = useAdminGuests()
 const { deadline, fetchSettings, patchSettings } = useAdminSettings()
 await Promise.all([fetchGuests(), fetchSettings()])
-
-const deadlineInput = ref(deadline.value ? new Date(deadline.value - new Date(deadline.value).getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '')
-
-async function saveDeadline() {
-  try {
-    const iso = deadlineInput.value ? new Date(deadlineInput.value).toISOString() : null
-    await patchSettings(iso)
-  } catch (e) {
-    console.error(e)
-    alert('Не удалось сохранить: некорректная дата дедлайна')
-  }
-}
-
-async function clearDeadline() {
-  deadlineInput.value = ''
-  await saveDeadline()
-}
 
 const editingId = ref<number | null>(null)
 const editForm = reactive({ fio: '', phone: '', comment: '', drinks: [] as string[], attending: null as boolean | null, allowCompanions: true })
@@ -153,14 +137,7 @@ function attendingLabel(attending: boolean | null) {
     <button @click="onLogout">Выйти</button>
     <a href="/api/admin/guests/export">Экспорт CSV</a>
 
-    <div>
-      <label>
-        Дедлайн ответа:
-        <input v-model="deadlineInput" type="datetime-local">
-      </label>
-      <button @click="saveDeadline">Сохранить дедлайн</button>
-      <button v-if="deadline" @click="clearDeadline">Снять дедлайн</button>
-    </div>
+    <SettingsPanel :deadline="deadline" :patch-settings="patchSettings" />
 
     <p v-if="loading">Загрузка...</p>
 
