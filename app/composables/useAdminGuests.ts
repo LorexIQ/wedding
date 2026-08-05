@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import type { GuestCreateInput } from '#shared/schemas/rsvp'
 
 export interface GuestRecord {
   id: number
@@ -14,14 +15,7 @@ export interface GuestRecord {
   companions: { id: number, fio: string, drinks: string[] }[]
 }
 
-export interface GuestCreateInput {
-  fio?: string
-  phone?: string
-  comment?: string
-  drinks?: string[]
-  attending?: boolean | null
-  allowCompanions?: boolean
-}
+export type { GuestCreateInput }
 
 export function useAdminGuests() {
   const guestsList = ref<GuestRecord[]>([])
