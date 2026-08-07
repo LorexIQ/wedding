@@ -6,6 +6,11 @@ import SettingsPanel from '../../components/admin/SettingsPanel.vue'
 
 definePageMeta({ middleware: 'admin' })
 
+// Класс висит на <body>, а не на корневом div страницы: модалки и тосты
+// Nuxt UI телепортируются в body и мимо контейнерного селектора остались бы
+// с антиквой приглашения.
+useHead({ bodyAttrs: { class: 'admin-ui' } })
+
 const { guestsList, loading, fetchGuests, createGuestInvite, patchGuest, removeGuest } = useAdminGuests()
 const { deadline, fetchSettings, patchSettings } = useAdminSettings()
 await Promise.all([fetchGuests(), fetchSettings()])

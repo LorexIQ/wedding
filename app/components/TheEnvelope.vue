@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
-import gsap from 'gsap'
+import type gsap from 'gsap'
 import { wedding } from '../content/wedding'
+import { buildEnvelopeTimeline } from '../utils/envelopeTimelines'
 
 /**
  * Гейт-конверт на первом заходе — порт референса (claude.ai/design
@@ -14,20 +15,25 @@ import { wedding } from '../content/wedding'
  * (лист выезжает вверх) на узких экранах выносил его за пределы viewport.
  *
  * Последовательность:
- * 1. Флап (48% высоты рамки) переворачивается 3D, двухслойный (лицо +
- *    заранее перевёрнутая изнанка) — не пропадает между 90°/180°.
- *    С полпути (48% длительности) перестаёт быть "поверх" — z-index.
- *    Пока он открывается, в вырезе передней стенки показывается клин
- *    лежащего внутри листа — единственное, что от листа видно.
- * 2. Конверт целиком уезжает вниз, а лист гасит этот сдвиг встречным
+ * 1. Сургучная печать ломается первой: оба осколка разлетаются по
+ *    баллистике (GSAP Physics2D) и падают за кадр.
+ * 2. Следом — флап (48% высоты рамки) переворачивается 3D, двухслойный
+ *    (лицо + заранее перевёрнутая изнанка), не пропадает между 90°/180°.
+ *    С полпути перестаёт быть "поверх" — z-index. Пока он открывается, в
+ *    вырезе передней стенки показывается клин лежащего внутри листа.
+ * 3. Конверт целиком уезжает вниз, а лист гасит этот сдвиг встречным
  *    transform'ом и остаётся на месте: передняя стенка сползает с листа
  *    и открывает его сверху вниз. Заслоняет лист сама стенка —
  *    непрозрачный элемент выше по z, — а не маска.
- * 3. FLIP из этого кадра: карточка-письмо прячется, её место (по реальным
- *    координатам getBoundingClientRect) занимает slot-контент (настоящий
- *    сайт), снапается на невидимый кадр к тем же координатам и уезжает
+ * 4. Пауза, письмо одно в кадре, его потряхивает; ещё пауза — и FLIP:
+ *    карточка-письмо прячется, её место (по реальным координатам
+ *    getBoundingClientRect) занимает slot-контент (настоящий сайт),
+ *    снапается на невидимый кадр к тем же координатам и уезжает
  *    transform'ом к 0/100% — вырастает в нормальный поток документа.
  *    Лист лежит в центре экрана, поэтому и зум идёт из центра.
+ *
+ * Сама хореография (тайминги, easing, физика осколков) живёт в
+ * `app/utils/envelopeTimelines.ts`.
  *
  * `envelopeOpened` — разовый флаг, назад в конверт пути нет.
  * `prefers-reduced-motion` — всё схлопывается в один кадр.
@@ -36,20 +42,8 @@ import { wedding } from '../content/wedding'
 const props = defineProps<{ alreadyOpened: boolean }>()
 const emit = defineEmits<{ opened: [] }>()
 
+/** Только для CSS-перехода тени флапа — тайминги анимации задаёт timeline. */
 const SPEED_MS = 650
-const FLAP_HANDOFF_MS = Math.round(SPEED_MS * 0.48)
-/** Пауза после открытия флапа — на неё видно лист в вырезе, до отъезда конверта. */
-const REVEAL_DELAY_MS = Math.round(SPEED_MS * 1.05)
-/** Длительность GSAP-твина отъезда конверта и встречного ему движения листа. */
-const ENVELOPE_EXIT_MS = 550
-const FLIP_MS = 450
-
-const FLAP_DUR = SPEED_MS / 1000
-const HANDOFF_POS = FLAP_HANDOFF_MS / 1000
-const REVEAL_POS = REVEAL_DELAY_MS / 1000
-const EXIT_DUR = ENVELOPE_EXIT_MS / 1000
-const FLIP_POS = REVEAL_POS + EXIT_DUR
-const FLIP_DUR = FLIP_MS / 1000
 
 const open = ref(false)
 const flapOnTop = ref(true)
@@ -69,6 +63,8 @@ const flapEl = ref<HTMLElement | null>(null)
 const envelopeVisualEl = ref<HTMLElement | null>(null)
 const letterClipEl = ref<HTMLElement | null>(null)
 const letterWobbleEl = ref<HTMLElement | null>(null)
+const sealBodyEl = ref<HTMLElement | null>(null)
+const sealFlapEl = ref<HTMLElement | null>(null)
 
 let hintTimer = 0
 const timeline = ref<gsap.core.Timeline | null>(null)
@@ -86,70 +82,33 @@ function finishReveal() {
  * post-unmount emit('opened') структурно невозможен, а не просто отловлен вручную.
  */
 function buildTimeline() {
-  const tl = gsap.timeline()
-
-  // Шаг 1: флап переворачивается с overshoot, с полпути перестаёт быть "поверх".
-  tl.to(flapEl.value, {
-    rotateX: 178,
-    duration: FLAP_DUR,
-    ease: 'back.out(1.7)'
-  }, 0)
-  tl.call(() => {
-    flapOnTop.value = false
-  }, [], HANDOFF_POS)
-
-  // Шаг 2: конверт уезжает вниз, лист тем же duration/ease встречным translateY гасит сдвиг.
-  tl.to([envelopeVisualEl.value, letterClipEl.value], {
-    y: (i: number) => (i === 0 ? '100vh' : '-100vh'),
-    duration: EXIT_DUR,
-    ease: 'power2.in',
-    onStart: () => {
-      envelopeLeaving.value = true
-    }
-  }, REVEAL_POS)
-
-  // Секундарное движение листа: мгновенный сдвиг в сторону + elastic-возврат в исходную позицию.
-  tl.set(letterWobbleEl.value, { rotate: 1.5, x: 3 }, REVEAL_POS)
-  tl.to(letterWobbleEl.value, {
-    rotate: 0,
-    x: 0,
-    duration: 0.3,
-    ease: 'elastic.out(1, 0.4)'
-  }, REVEAL_POS)
-
-  // Шаг 3: FLIP карточки-письма в настоящий сайт. Конверт к этому моменту уже уехал.
-  tl.call(() => {
-    const card = peekCard.value
-    if (card && siteWrap.value) {
-      const rect = card.getBoundingClientRect()
-      const vw = window.innerWidth
-      const vh = window.innerHeight
-      flipFrom.x = rect.left + rect.width / 2 - vw / 2
-      flipFrom.y = rect.top + rect.height / 2 - vh / 2
-      flipFrom.scaleX = rect.width / vw
-      flipFrom.scaleY = rect.height / vh
-    }
-    pageGrowing.value = true
-  }, [], FLIP_POS)
-  tl.fromTo(siteWrap.value,
-    {
-      x: () => flipFrom.x,
-      y: () => flipFrom.y,
-      scaleX: () => flipFrom.scaleX,
-      scaleY: () => flipFrom.scaleY
+  return buildEnvelopeTimeline({
+    flap: flapEl.value!,
+    envelope: envelopeVisualEl.value!,
+    letterClip: letterClipEl.value!,
+    letterWobble: letterWobbleEl.value!,
+    sealBody: sealBodyEl.value!,
+    sealFlap: sealFlapEl.value!,
+    siteWrap: siteWrap.value!
+  }, {
+    onFlapHandoff: () => { flapOnTop.value = false },
+    onEnvelopeExit: () => { envelopeLeaving.value = true },
+    onFlipStart: () => {
+      const card = peekCard.value
+      if (card && siteWrap.value) {
+        const rect = card.getBoundingClientRect()
+        const vw = window.innerWidth
+        const vh = window.innerHeight
+        flipFrom.x = rect.left + rect.width / 2 - vw / 2
+        flipFrom.y = rect.top + rect.height / 2 - vh / 2
+        flipFrom.scaleX = rect.width / vw
+        flipFrom.scaleY = rect.height / vh
+      }
+      pageGrowing.value = true
     },
-    {
-      x: 0,
-      y: 0,
-      scaleX: 1,
-      scaleY: 1,
-      duration: FLIP_DUR,
-      ease: 'elastic.out(1, 0.6)',
-      onComplete: finishReveal
-    },
-    FLIP_POS)
-
-  return tl
+    flipFrom: () => flipFrom,
+    onComplete: finishReveal
+  })
 }
 
 function onOpen() {
@@ -252,7 +211,7 @@ onUnmounted(() => {
              пока конверт закрыт, они стыкуются в цельный оттиск, а при
              открытии крышка уносит свой клин — на корпусе остаётся
              вырванный уголок. -->
-        <div class="envelope__seal envelope__seal--body">✦</div>
+        <div ref="sealBodyEl" class="envelope__seal envelope__seal--body">✦</div>
 
         <div ref="flapEl" class="envelope__flap" :class="{ 'envelope__flap--open': open }" :style="{ zIndex: flapOnTop ? 10 : 0 }">
           <div class="envelope__flap-face envelope__flap-face--front" />
@@ -260,7 +219,7 @@ onUnmounted(() => {
 
           <!-- Ребёнок флапа, но НЕ его грани: грань обрезана треугольником
                и срезала бы зубцы разрыва, которые заходят за её край. -->
-          <div class="envelope__seal envelope__seal--flap">✦</div>
+          <div ref="sealFlapEl" class="envelope__seal envelope__seal--flap">✦</div>
         </div>
       </div>
     </div>
@@ -396,12 +355,18 @@ onUnmounted(() => {
    от рамки, --flap от флапа) и взаимно дополняющим clip-path. Значок ✦
    есть в обоих: разрыв проходит через центр, поэтому он тоже рвётся
    пополам и половинки складываются обратно, пока конверт закрыт. */
+/* Центровка на margin, а не на transform: осколки разлетает GSAP
+   (physics2D), а он пишет именно в transform и затёр бы
+   translate(-50%,-50%) — печать прыгнула бы на четверть себя в момент
+   старта. Оба margin считаются от ШИРИНЫ родителя, и при aspect-ratio:1
+   это ровно половина размера по обеим осям. */
 .envelope__seal {
   position: absolute;
   left: 50%;
   width: 15%;
   aspect-ratio: 1;
-  transform: translate(-50%, -50%);
+  margin-left: -7.5%;
+  margin-top: -7.5%;
   border-radius: 50%;
   display: flex;
   align-items: center;

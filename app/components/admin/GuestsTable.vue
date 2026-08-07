@@ -6,6 +6,7 @@ import { DRINK_LABELS, type DrinkOption } from '#shared/constants/drinks'
 import type { GuestRecord, GuestCreateInput } from '../../composables/useAdminGuests'
 import GuestFormFields, { type GuestFormState } from './GuestFormFields.vue'
 import DeleteGuestModal from './DeleteGuestModal.vue'
+import { cellClass, headCellClass, stickyCellClass, stickyHeadCellClass } from './tableClasses'
 
 const props = defineProps<{
   guests: GuestRecord[]
@@ -167,30 +168,30 @@ function attendingColor(attending: boolean | null): 'success' | 'error' | 'neutr
     </p>
 
     <template v-else>
-      <div class="hidden md:block overflow-x-auto">
-        <table class="w-full border-collapse text-sm">
+      <div class="admin-scroll hidden md:block overflow-x-auto border-t border-l border-default rounded-md">
+        <table class="w-full border-separate border-spacing-0 text-sm">
           <thead>
-            <tr class="border-b border-gray-200 text-left">
-              <th class="px-3 py-2">ФИО</th>
-              <th class="px-3 py-2">Телефон</th>
-              <th class="px-3 py-2">Напитки</th>
-              <th class="px-3 py-2">Комментарий</th>
-              <th class="px-3 py-2">Придёт</th>
-              <th class="px-3 py-2">Тип</th>
-              <th class="px-3 py-2">Сопровождающие</th>
-              <th class="px-3 py-2">Ответил</th>
-              <th class="px-3 py-2">Открыл конверт</th>
-              <th class="px-3 py-2">Ссылка</th>
-              <th class="px-3 py-2" />
+            <tr>
+              <th :class="headCellClass">ФИО</th>
+              <th :class="headCellClass">Телефон</th>
+              <th :class="headCellClass">Напитки</th>
+              <th :class="headCellClass">Комментарий</th>
+              <th :class="headCellClass">Придёт</th>
+              <th :class="headCellClass">Тип</th>
+              <th :class="headCellClass">Сопровождающие</th>
+              <th :class="headCellClass">Ответил</th>
+              <th :class="headCellClass">Открыл конверт</th>
+              <th :class="headCellClass">Ссылка</th>
+              <th :class="stickyHeadCellClass">Действия</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="guest in guests" :key="guest.id" class="border-b border-gray-100 align-top">
+            <tr v-for="guest in guests" :key="guest.id">
               <template v-if="editingId === guest.id">
                 <GuestFormFields :state="editForm" layout="row" :errors="editErrors" />
-                <td class="px-3 py-2">{{ guest.companions.map((c) => c.fio).join(', ') }}</td>
-                <td colspan="3" />
-                <td class="px-3 py-2">
+                <td :class="cellClass">{{ guest.companions.map((c) => c.fio).join(', ') }}</td>
+                <td :class="cellClass" colspan="3" />
+                <td :class="stickyCellClass">
                   <div class="flex gap-2">
                     <UButton size="xs" @click="onEditSubmit(guest)">
                       Сохранить
@@ -203,35 +204,35 @@ function attendingColor(attending: boolean | null): 'success' | 'error' | 'neutr
               </template>
 
               <template v-else>
-                <td class="px-3 py-2">{{ guest.fio }}</td>
-                <td class="px-3 py-2">{{ guest.phone }}</td>
-                <td class="px-3 py-2">{{ guest.drinks.map((d) => DRINK_LABELS[d as DrinkOption]).join(', ') }}</td>
-                <td class="px-3 py-2">{{ guest.comment }}</td>
-                <td class="px-3 py-2">
+                <td :class="cellClass">{{ guest.fio }}</td>
+                <td :class="cellClass">{{ guest.phone }}</td>
+                <td :class="cellClass">{{ guest.drinks.map((d) => DRINK_LABELS[d as DrinkOption]).join(', ') }}</td>
+                <td :class="cellClass">{{ guest.comment }}</td>
+                <td :class="cellClass">
                   <UBadge :color="attendingColor(guest.attending)" variant="subtle">
                     {{ attendingLabel(guest.attending) }}
                   </UBadge>
                 </td>
-                <td class="px-3 py-2">{{ guest.allowCompanions ? 'Со спутниками' : 'Фиксированное' }}</td>
-                <td class="px-3 py-2">{{ guest.companions.map((c) => c.fio).join(', ') }}</td>
-                <td class="px-3 py-2">
+                <td :class="cellClass">{{ guest.allowCompanions ? 'Со спутниками' : 'Фиксированное' }}</td>
+                <td :class="cellClass">{{ guest.companions.map((c) => c.fio).join(', ') }}</td>
+                <td :class="cellClass">
                   <UCheckbox
                     :model-value="guest.submitted"
                     @update:model-value="(v) => toggleSubmitted(guest, Boolean(v))"
                   />
                 </td>
-                <td class="px-3 py-2">
+                <td :class="cellClass">
                   <UCheckbox
                     :model-value="guest.envelopeOpened"
                     @update:model-value="(v) => toggleEnvelopeOpened(guest, Boolean(v))"
                   />
                 </td>
-                <td class="px-3 py-2">
+                <td :class="cellClass">
                   <UButton size="xs" variant="soft" :disabled="!guest.inviteCode" @click="copyLink(guest)">
                     Скопировать
                   </UButton>
                 </td>
-                <td class="px-3 py-2">
+                <td :class="stickyCellClass">
                   <div class="flex gap-2">
                     <UButton size="xs" variant="soft" @click="startEdit(guest)">
                       Изменить
@@ -244,11 +245,11 @@ function attendingColor(attending: boolean | null): 'success' | 'error' | 'neutr
               </template>
             </tr>
 
-            <tr v-if="creating" class="border-b border-gray-100 align-top">
+            <tr v-if="creating">
               <GuestFormFields :state="draft" layout="row" :errors="createErrors" />
-              <td />
-              <td colspan="3" />
-              <td class="px-3 py-2">
+              <td :class="cellClass" />
+              <td :class="cellClass" colspan="3" />
+              <td :class="stickyCellClass">
                 <div class="flex gap-2">
                   <UButton size="xs" @click="onCreateSubmit">
                     ✓

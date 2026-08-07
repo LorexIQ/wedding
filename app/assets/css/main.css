@@ -157,3 +157,38 @@ p {
     transform: none;
   }
 }
+
+/* Админка — рабочий инструмент, а не приглашение: интерфейсный шрифт без
+   засечек вместо антиквы. Класс вешается на <body> (через bodyAttrs в
+   админ-страницах), потому что модалки и тосты Nuxt UI телепортируются
+   в body и мимо любого контейнерного селектора прошли бы серифом. */
+.admin-ui {
+  font-family: var(--sans);
+}
+
+/* Таблица гостей шире экрана — горизонтальный скролл виден постоянно,
+   поэтому системную полосу заменяем на тонкую в палитре сайта. */
+.admin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sage) var(--linen-deep);
+}
+
+.admin-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.admin-scroll::-webkit-scrollbar-track {
+  background: var(--linen-deep);
+  border-radius: 999px;
+}
+
+.admin-scroll::-webkit-scrollbar-thumb {
+  background: var(--sage);
+  border: 2px solid var(--linen-deep);
+  border-radius: 999px;
+}
+
+.admin-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--wheat);
+}
