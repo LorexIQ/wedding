@@ -3,6 +3,7 @@ import { useAdminGuests } from '../../composables/useAdminGuests'
 import { useAdminSettings } from '../../composables/useAdminSettings'
 import GuestsTable from '../../components/admin/GuestsTable.vue'
 import SettingsPanel from '../../components/admin/SettingsPanel.vue'
+import StatsPanel from '../../components/admin/StatsPanel.vue'
 
 definePageMeta({ middleware: 'admin' })
 
@@ -11,7 +12,7 @@ definePageMeta({ middleware: 'admin' })
 // с антиквой приглашения.
 useHead({ bodyAttrs: { class: 'admin-ui' } })
 
-const { guestsList, loading, fetchGuests, createGuestInvite, patchGuest, removeGuest } = useAdminGuests()
+const { guestsList, loading, fetchGuests, createGuestInvite, patchGuest, removeGuest, removeCompanion } = useAdminGuests()
 const { deadline, fetchSettings, patchSettings } = useAdminSettings()
 await Promise.all([fetchGuests(), fetchSettings()])
 
@@ -39,12 +40,15 @@ async function onLogout() {
 
     <SettingsPanel :deadline="deadline" :patch-settings="patchSettings" />
 
+    <StatsPanel :guests="guestsList" />
+
     <GuestsTable
       :guests="guestsList"
       :loading="loading"
       :create-guest-invite="createGuestInvite"
       :patch-guest="patchGuest"
       :remove-guest="removeGuest"
+      :remove-companion="removeCompanion"
     />
   </div>
 </template>

@@ -56,5 +56,14 @@ export function useAdminGuests() {
     guestsList.value = guestsList.value.filter((guest) => guest.id !== id)
   }
 
-  return { guestsList, loading, fetchGuests, createGuestInvite, patchGuest, removeGuest }
+  async function removeCompanion(companionId: number) {
+    const requestFetch = useRequestFetch()
+    await requestFetch(`/api/admin/companions/${companionId}`, { method: 'DELETE' })
+    const guest = guestsList.value.find((g) => g.companions.some((c) => c.id === companionId))
+    if (guest) {
+      guest.companions = guest.companions.filter((c) => c.id !== companionId)
+    }
+  }
+
+  return { guestsList, loading, fetchGuests, createGuestInvite, patchGuest, removeGuest, removeCompanion }
 }

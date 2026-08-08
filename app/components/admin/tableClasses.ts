@@ -17,6 +17,6 @@ export const headCellClass = `${cellClass} font-medium text-left bg-elevated`
  * уезжающие под неё ячейки просвечивают, а левая граница отбивает её от
  * прокручиваемой части.
  */
-export const stickyCellClass = `${cellClass} sticky right-0 z-10 bg-default border-l-2 border-l-default`
+export const stickyCellClass = `${cellClass} sticky right-0 z-10 bg-[var(--linen)] border-l-2 border-l-default`
 
 export const stickyHeadCellClass = `${headCellClass} sticky right-0 z-20 border-l-2 border-l-default`

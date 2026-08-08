@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { shortFio } from '#shared/utils/shortFio'
-import type { GuestRecord } from '../../composables/useAdminGuests'
 
-const props = defineProps<{ guest: GuestRecord | null }>()
+const props = defineProps<{ companion: { id: number, fio: string } | null }>()
 const open = defineModel<boolean>('open', { required: true })
 const emit = defineEmits<{ confirm: [] }>()
 
@@ -15,8 +14,8 @@ function onConfirm() {
 <template>
   <UModal
     v-model:open="open"
-    title="Удалить гостя?"
-    :description="props.guest ? `«${shortFio(props.guest.fio) || 'Без имени'}» будет удалён без возможности восстановления.` : ''"
+    title="Удалить сопровождающего?"
+    :description="props.companion ? `«${shortFio(props.companion.fio)}» будет удалён без возможности восстановления.` : ''"
   >
     <template #footer>
       <div class="flex justify-end gap-2">

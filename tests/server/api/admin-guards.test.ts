@@ -3,6 +3,7 @@ import { createMockEvent } from '../../helpers/mockEvent'
 import listGuestsHandler from '../../../server/api/admin/guests/index.get'
 import patchGuestHandler from '../../../server/api/admin/guests/[id].patch'
 import deleteGuestHandler from '../../../server/api/admin/guests/[id].delete'
+import deleteCompanionHandler from '../../../server/api/admin/companions/[id].delete'
 import exportGuestsHandler from '../../../server/api/admin/guests/export.get'
 import createGuestHandler from '../../../server/api/admin/guests/index.post'
 import getSettingsHandler from '../../../server/api/admin/settings.get'
@@ -38,6 +39,11 @@ describe('admin route auth guards', () => {
   it('DELETE /api/admin/guests/:id rejects an unauthenticated request with 401', async () => {
     const event = createMockEvent({ method: 'DELETE', params: { id: '1' } })
     await expect(deleteGuestHandler(event)).rejects.toMatchObject({ statusCode: 401 })
+  })
+
+  it('DELETE /api/admin/companions/:id rejects an unauthenticated request with 401', async () => {
+    const event = createMockEvent({ method: 'DELETE', params: { id: '1' } })
+    await expect(deleteCompanionHandler(event)).rejects.toMatchObject({ statusCode: 401 })
   })
 
   it('GET /api/admin/guests/export rejects an unauthenticated request with 401', async () => {

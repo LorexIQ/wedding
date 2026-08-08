@@ -81,6 +81,20 @@ describe('guestsToCsv', () => {
     expect(lines[1]).toBe("4,Тест,,'+1+1,,")
   })
 
+  it('trims guest and companion ФИО to first and last name only', () => {
+    const csv = guestsToCsv([{
+      id: 7,
+      fio: 'Иван Петрович Иванов',
+      phone: null,
+      comment: null,
+      drinks: [],
+      companions: [{ fio: 'Пётр Петрович Петров', drinks: [] }]
+    }])
+
+    const lines = csv.split('\n')
+    expect(lines[1]).toBe('7,Иван Петрович,,,,Пётр Петрович ()')
+  })
+
   it('renders a guest with null fio as an empty ФИО column', () => {
     const csv = guestsToCsv([{
       id: 6,

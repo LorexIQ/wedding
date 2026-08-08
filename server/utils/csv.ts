@@ -1,4 +1,5 @@
 import { stringify } from 'csv-stringify/sync'
+import { shortFio } from '#shared/utils/shortFio'
 
 interface GuestRow {
   id: number
@@ -25,10 +26,10 @@ export function guestsToCsv(guestRows: GuestRow[]): string {
   const records = [header]
 
   for (const guest of guestRows) {
-    const companionsText = guest.companions.map((c) => `${c.fio} (${c.drinks.join('; ')})`).join(' | ')
+    const companionsText = guest.companions.map((c) => `${shortFio(c.fio)} (${c.drinks.join('; ')})`).join(' | ')
     records.push([
       String(guest.id),
-      neutralizeFormulaInjection(guest.fio ?? ''),
+      neutralizeFormulaInjection(shortFio(guest.fio)),
       guest.phone ?? '',
       neutralizeFormulaInjection(guest.comment ?? ''),
       guest.drinks.join('; '),
