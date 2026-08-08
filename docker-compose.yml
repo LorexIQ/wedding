@@ -1,5 +1,6 @@
 services:
   app:
+    image: ghcr.io/lorexiq/wedding:latest
     build: .
     expose:
       - "3000"
