@@ -17,6 +17,13 @@ export default defineNuxtConfig({
         // Запрещаем индексацию сайта поисковыми системами.
         { name: 'robots', content: 'noindex, nofollow, noarchive, nosnippet' }
       ],
+      link: [
+        // SVG — основной фавикон (чёткий на любом масштабе), PNG — фолбэк для
+        // браузеров без поддержки SVG-фавиконок (Safari, старые Chromium).
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32.png' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' }
+      ],
       // Пиксель для тех, у кого выключен JavaScript: плагин Метрики
       // у них не отработает, а этот запрос уйдёт.
       noscript: [
