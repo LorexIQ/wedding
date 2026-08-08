@@ -6,7 +6,8 @@ import {
   CONFETTI_DRAG,
   CONFETTI_SPARK_COUNT,
   CONFETTI_RIBBON_COUNT,
-  CONFETTI_SALVO
+  CONFETTI_SALVO,
+  CONFETTI_LAUNCH_ANGLE
 } from '../utils/confettiConfig'
 
 /**
@@ -55,13 +56,15 @@ function pick<T>(list: readonly T[]): T {
 /** Снаряд, летящий вверх от края экрана к центру. */
 function launchShell(fromLeft: boolean): Particle {
   const edge = fromLeft ? rand(0.04, 0.14) : rand(0.86, 0.96)
-  const inward = fromLeft ? rand(120, 260) : rand(-260, -120)
+  const speed = rand(760, 940)
+  const angle = rand(CONFETTI_LAUNCH_ANGLE.min, CONFETTI_LAUNCH_ANGLE.max) * (Math.PI / 180)
+  const inward = (fromLeft ? 1 : -1) * speed * Math.sin(angle)
 
   return {
     x: w * edge,
     y: h + 10,
     vx: inward,
-    vy: -rand(760, 940),
+    vy: -speed * Math.cos(angle),
     life: 0,
     maxLife: rand(0.85, 1.15),
     color: pick(CONFETTI_COLORS),

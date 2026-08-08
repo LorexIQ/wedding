@@ -6,8 +6,12 @@
 // чужой, а шалфейная зелень с айвори читается как часть оформления.
 export const CONFETTI_COLORS = ['#7C8A6E', '#93A47F', '#C7CEB9', '#E8ECDF', '#FBFAF6']
 
-export const CONFETTI_GRAVITY = 820
+export const CONFETTI_GRAVITY = 600
 export const CONFETTI_DRAG = 0.86
+
+// Угол взлёта снаряда от вертикали (0° — прямо вверх); у каждого
+// снаряда свой случайный угол в этом диапазоне.
+export const CONFETTI_LAUNCH_ANGLE = { min: 0, max: 10 }
 
 export const CONFETTI_SPARK_COUNT = { min: 54, max: 78 }
 export const CONFETTI_RIBBON_COUNT = 16
