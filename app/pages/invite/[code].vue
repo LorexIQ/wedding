@@ -1,4 +1,6 @@
 <script setup lang="ts">
+useSeoMeta({ title: 'Открываем приглашение…' })
+
 const route = useRoute()
 const code = String(route.params.code)
 const inviteCode = useInviteCode()

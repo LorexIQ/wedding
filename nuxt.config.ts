@@ -13,6 +13,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   app: {
     head: {
+      title: `${wedding.groom} и ${wedding.bride}`,
       meta: [
         // Запрещаем индексацию сайта поисковыми системами.
         { name: 'robots', content: 'noindex, nofollow, noarchive, nosnippet' }

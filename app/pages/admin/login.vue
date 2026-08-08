@@ -4,6 +4,7 @@ import { reactive, ref } from 'vue'
 // См. комментарий в admin/index.vue: класс на <body>, чтобы интерфейсный
 // шрифт доставал и до телепортируемых оверлеев Nuxt UI.
 useHead({ bodyAttrs: { class: 'admin-ui' } })
+useSeoMeta({ title: 'Вход в админку' })
 
 const state = reactive({ login: '', password: '' })
 const error = ref('')

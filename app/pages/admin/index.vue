@@ -11,6 +11,7 @@ definePageMeta({ middleware: 'admin' })
 // Nuxt UI телепортируются в body и мимо контейнерного селектора остались бы
 // с антиквой приглашения.
 useHead({ bodyAttrs: { class: 'admin-ui' } })
+useSeoMeta({ title: 'Гости' })
 
 const { guestsList, loading, fetchGuests, createGuestInvite, patchGuest, removeGuest, removeCompanion } = useAdminGuests()
 const { deadline, fetchSettings, patchSettings } = useAdminSettings()

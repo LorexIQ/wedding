@@ -1,3 +1,7 @@
+<script setup lang="ts">
+useSeoMeta({ title: 'Вы не приглашены' })
+</script>
+
 <template>
   <main class="band band--paper stub">
     <div class="inner stub__body">

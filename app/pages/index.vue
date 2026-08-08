@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { wedding } from '../content/wedding'
 import { useInviteCode } from '../composables/useInviteCode'
 
-const title = `${wedding.groom} и ${wedding.bride} — ${wedding.dateLabel.replace('среда, ', '')}`
+const openedTitle = `${wedding.groom} и ${wedding.bride} — ${wedding.dateLabel.replace('среда, ', '')}`
 const description = `Приглашаем вас на нашу свадьбу ${wedding.dateLabel}, ${wedding.timeLabel}. `
   + `${wedding.venue.name} («${wedding.venue.subtitle}»), ${wedding.venue.address}, ${wedding.venue.settlement}.`
+
+const inviteGuest = useState<{ envelopeOpened: boolean } | undefined>('inviteGuest')
+const title = computed(() => inviteGuest.value?.envelopeOpened ? openedTitle : 'Откройте письмо')
 
 useSeoMeta({
   title,
@@ -20,7 +23,6 @@ useHead({
   htmlAttrs: { lang: 'ru' }
 })
 
-const inviteGuest = useState<{ envelopeOpened: boolean } | undefined>('inviteGuest')
 const inviteCode = useInviteCode()
 const confettiRef = ref<{ fire: () => void } | null>(null)
 
